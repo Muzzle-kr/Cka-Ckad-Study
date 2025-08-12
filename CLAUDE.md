@@ -97,6 +97,19 @@ week1/
 - 학습 내용과 연계된 실제 파일로 명령어를 직접 실행해볼 수 있습니다
 - 퀴즈 문제도 예시 파일을 기반으로 출제됩니다
 
+### 퀴즈 시스템
+각 학습 주제마다 2가지 버전의 퀴즈가 제공됩니다:
+- **HTML 인터랙티브 퀴즈**: 실시간 정답 확인, 동기부여 메시지, 진행도 표시
+- **Markdown 퀴즈**: 전통적인 텍스트 기반 퀴즈 (백업/참고용)
+
+#### 퀴즈 특징
+- ✅ **실시간 피드백**: 입력 즉시 정답/오답 확인
+- 🎉 **동기부여 시스템**: 정답 시 격려 메시지, 오답 시 재도전 격려
+- 📊 **진행도 추적**: 현재 진행 상황을 시각적으로 표시
+- 💡 **정답 보기**: 클릭으로 힌트와 상세 설명 확인
+- 🏆 **점수별 피드백**: 8-10개(🥇), 6-7개(🥈), 5개 이하(🥉)
+- ⌨️ **편의 기능**: Enter 키 정답 확인, 다시 풀기, 모든 정답 보기
+
 ---
 
 ## 💡 학습 노트 & 팁
@@ -138,10 +151,10 @@ grep -i error sample-log.txt
 ### 유용한 명령어
 ```bash
 # 컨테이너 관리
-docker-compose up -d              # 백그라운드 실행
-docker-compose exec linux-practice bash  # 컨테이너 접속
-docker-compose logs -f            # 로그 실시간 확인
-docker-compose down               # 컨테이너 중지
+docker compose up -d              # 백그라운드 실행
+docker compose exec linux-practice bash  # 컨테이너 접속
+docker compose logs -f            # 로그 실시간 확인
+docker compose down               # 컨테이너 중지
 
 # 학습 도구
 generate-logs.sh &                # 실습용 로그 생성
@@ -164,6 +177,7 @@ k get pods                        # kubectl 별칭
 앞으로 모든 커밋은 다음 형식을 따릅니다:
 
 ### 커밋 타입
+- **initialize**: 프로젝트 초기 설정
 - **feat**: 새로운 기능 추가
 - **fix**: 버그 수정
 - **docs**: 문서만 수정

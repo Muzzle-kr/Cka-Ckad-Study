@@ -13,9 +13,9 @@ RUN apt-get update && apt-get install -y \
     iputils-ping \
     dnsutils \
     telnet \
-    nc \
+    netcat-openbsd \
     jq \
-    systemctl \
+    systemd \
     && rm -rf /var/lib/apt/lists/*
 
 # kubectl 설치

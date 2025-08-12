@@ -217,39 +217,63 @@ journalctl -p warning      # 경고 레벨 이상만
 
 ### 예시 파일 활용
 실습용 파일들이 `examples/` 폴더에 준비되어 있습니다:
-- `sample-log.txt`: 애플리케이션 로그 샘플
+- `sample-log.txt`: 애플리케이션 로그 샘플 (INFO, ERROR, WARNING, DEBUG 포함)
 - `pod-status.txt`: kubectl get pods 출력 예시
-- `users.txt`: 콜론 구분자 텍스트 파일
+- `users.txt`: 콜론 구분자 사용자 정보 파일
 - `deployment.yaml`: K8s 매니페스트 파일
 
-### 실습 명령어
+### 기본 실습 명령어
 ```bash
 # 1. 로그 파일에서 ERROR 찾기
-grep -i error examples/sample-log.txt
+grep "ERROR" examples/sample-log.txt
 
-# 2. Pod 상태에서 이름만 추출
+# 2. ERROR가 없는 줄만 출력 (역방향 검색)
+grep -v "ERROR" examples/sample-log.txt
+
+# 3. Pod 이름만 추출 (헤더 제외)
 awk 'NR>1 {print $1}' examples/pod-status.txt
 
-# 3. Running 상태인 Pod만 출력
+# 4. Running 상태인 Pod만 출력
 awk '$3=="Running" {print $1, $3}' examples/pod-status.txt
 
-# 4. 사용자 파일에서 developer만 추출
+# 5. developer 권한 사용자만 추출
 awk -F: '$2=="developer" {print $1}' examples/users.txt
 
-# 5. YAML에서 이미지 태그 변경
+# 6. YAML에서 이미지 태그 변경
 sed 's/nginx:latest/nginx:1.20/g' examples/deployment.yaml
 
-# 6. 로그에서 WARNING과 ERROR만 찾기
+# 7. 로그에서 WARNING과 ERROR만 찾기
 grep -E "WARNING|ERROR" examples/sample-log.txt
 
-# 7. 첫 5줄만 출력
-sed -n '1,5p' examples/sample-log.txt
+# 8. 첫 3줄만 출력
+sed -n '1,3p' examples/sample-log.txt
+```
 
-# 8. kubelet 서비스 상태 확인 (실제 시스템)
-systemctl status kubelet
+### 조합 실습 명령어
+```bash
+# 9. 문제가 있는 Pod 찾기 (Running이 아닌 것들)
+awk 'NR>1 && $3!="Running" {print $1, $3}' examples/pod-status.txt
 
-# 9. kubelet 로그 확인 (실제 시스템)
-journalctl -u kubelet --since "10 minutes ago"
+# 10. 로그에서 에러 개수 세기
+grep -c "ERROR" examples/sample-log.txt
+
+# 11. 사용자별 홈 디렉토리와 권한 출력
+awk -F: '{print $1, $2, $4}' examples/users.txt
+
+# 12. Pod 상태 요약 (상태별 개수)
+awk 'NR>1 {status[$3]++} END {for(s in status) print s, status[s]}' examples/pod-status.txt
+```
+
+### Docker 컨테이너에서 실습하기
+```bash
+# 컨테이너 실행
+docker-compose up -d linux-practice
+docker exec -it cka-ckad-practice bash
+
+# 실습 디렉토리로 이동
+cd /study/week1/examples
+
+# 위 명령어들을 실제로 실행해보세요!
 ```
 
 학습 완료! 이제 퀴즈를 풀어보세요 🎯

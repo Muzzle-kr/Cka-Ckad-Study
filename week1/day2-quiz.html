@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 2 퀴즈: Linux 필수 도구</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #10b981;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .quiz-content {
+            padding: 40px;
+        }
+
+        .question {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid #4f46e5;
+            display: none;
+        }
+
+        .question.active {
+            display: block;
+        }
+
+        .question h3 {
+            color: #1f2937;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .question-meta {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: #1f2937;
+            color: #f9fafb;
+            margin-bottom: 15px;
+            transition: border-color 0.3s ease;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4338ca;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-show-answer {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-show-answer:hover {
+            background: #059669;
+        }
+
+        .feedback {
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .feedback.correct {
+            background: #dcfce7;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+
+        .feedback.incorrect {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .answer-section {
+            background: #f0f9ff;
+            border: 2px solid #0284c7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .answer-section pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .score-section {
+            text-align: center;
+            padding: 30px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .celebration {
+            font-size: 3rem;
+            margin: 20px 0;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .question-counter {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .tip {
+            background: #fffbeb;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Linux 필수 도구 퀴즈</h1>
+            <p>grep, awk, sed, find, systemctl/journalctl 마스터하기!</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+        </div>
+
+        <div class="quiz-content">
+            <!-- Question 1 -->
+            <div class="question active" data-question="1">
+                <div class="question-meta">🔍 grep 관련 - 1/10</div>
+                <h3>/var/log/syslog 파일에서 "error"라는 단어가 포함된 줄을 대소문자 구분 없이 검색하고 줄 번호도 함께 출력하는 명령어는?</h3>
+                <input type="text" class="answer-input" placeholder="명령어를 입력하세요 (예: grep -i error file.txt)">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="checkAnswer(1)">정답 확인</button>
+                    <button class="btn btn-show-answer" onclick="showAnswer(1)">정답 보기</button>
+                </div>
+                <div class="feedback" id="feedback1"></div>
+                <div class="answer-section" id="answer1">
+                    <h4>✅ 정답:</h4>
+                    <pre>grep -in "error" /var/log/syslog
+# 또는
+grep -i -n "error" /var/log/syslog</pre>
+                    <div class="tip">💡 <strong>-i</strong>: 대소문자 구분 없음, <strong>-n</strong>: 줄 번호 표시</div>
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question" data-question="2">
+                <div class="question-meta">🔍 grep 관련 - 2/10</div>
+                <h3>kubectl logs 출력에서 "failed"와 "error"가 포함된 줄을 모두 찾는 명령어는?</h3>
+                <input type="text" class="answer-input" placeholder="명령어를 입력하세요">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="checkAnswer(2)">정답 확인</button>
+                    <button class="btn btn-show-answer" onclick="showAnswer(2)">정답 보기</button>
+                </div>
+                <div class="feedback" id="feedback2"></div>
+                <div class="answer-section" id="answer2">
+                    <h4>✅ 정답:</h4>
+                    <pre>kubectl logs pod-name | grep -E "failed|error"
+# 또는
+kubectl logs pod-name | grep -E "(failed|error)"</pre>
+                    <div class="tip">💡 <strong>-E</strong>: 확장 정규식 사용으로 OR 검색 가능</div>
+                </div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question" data-question="3">
+                <div class="question-meta">⚡ awk 관련 - 3/10</div>
+                <h3>kubectl get pods 출력에서 헤더 줄을 제외하고 첫 번째 컬럼(Pod 이름)만 출력하는 명령어는?</h3>
+                <input type="text" class="answer-input" placeholder="명령어를 입력하세요">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="checkAnswer(3)">정답 확인</button>
+                    <button class="btn btn-show-answer" onclick="showAnswer(3)">정답 보기</button>
+                </div>
+                <div class="feedback" id="feedback3"></div>
+                <div class="answer-section" id="answer3">
+                    <h4>✅ 정답:</h4>
+                    <pre>kubectl get pods | awk 'NR>1 {print $1}'</pre>
+                    <div class="tip">💡 <strong>NR>1</strong>: 줄 번호가 1보다 큰 줄 (헤더 제외)</div>
+                </div>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="question" data-question="4">
+                <div class="question-meta">⚡ awk 관련 - 4/10</div>
+                <h3>file.txt에서 세 번째 컬럼이 "Running"인 행의 첫 번째 컬럼을 출력하는 명령어는?</h3>
+                <input type="text" class="answer-input" placeholder="명령어를 입력하세요">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="checkAnswer(4)">정답 확인</button>
+                    <button class="btn btn-show-answer" onclick="showAnswer(4)">정답 보기</button>
+                </div>
+                <div class="feedback" id="feedback4"></div>
+                <div class="answer-section" id="answer4">
+                    <h4>✅ 정답:</h4>
+                    <pre>awk '$3=="Running" {print $1}' file.txt</pre>
+                    <div class="tip">💡 <strong>$3=="Running"</strong>: 세 번째 컬럼이 "Running"인 조건</div>
+                </div>
+            </div>
+
+            <!-- Question 5 -->
+            <div class="question" data-question="5">
+                <div class="question-meta">⚡ awk 관련 - 5/10</div>
+                <h3>/etc/passwd 파일에서 콜론(:) 기준으로 분할하여 첫 번째 필드(사용자명)만 출력하는 명령어는?</h3>
+                <input type="text" class="answer-input" placeholder="명령어를 입력하세요">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="checkAnswer(5)">정답 확인</button>
+                    <button class="btn btn-show-answer" onclick="showAnswer(5)">정답 보기</button>
+                </div>
+                <div class="feedback" id="feedback5"></div>
+                <div class="answer-section" id="answer5">
+                    <h4>✅ 정답:</h4>
+                    <pre>awk -F: '{print $1}' /etc/passwd</pre>
+                    <div class="tip">💡 <strong>-F:</strong>: 구분자를 콜론으로 지정</div>
+                </div>
+            </div>
+
+            <!-- Question 6 -->
+            <div class="question" data-question="6">
+                <div class="question-meta">🔄 sed 관련 - 6/10</div>
+                <h3>deployment.yaml 파일에서 nginx:latest를 nginx:1.20으로 모두 바꾸는 명령어는?</h3>
+                <input type="text" class="answer-input" placeholder="명령어를 입력하세요">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="checkAnswer(6)">정답 확인</button>
+                    <button class="btn btn-show-answer" onclick="showAnswer(6)">정답 보기</button>
+                </div>
+                <div class="feedback" id="feedback6"></div>
+                <div class="answer-section" id="answer6">
+                    <h4>✅ 정답:</h4>
+                    <pre>sed 's/nginx:latest/nginx:1.20/g' deployment.yaml</pre>
+                    <div class="tip">💡 <strong>s/old/new/g</strong>: 모든 매치를 치환, g 플래그 필수</div>
+                </div>
+            </div>
+
+            <!-- Question 7 -->
+            <div class="question" data-question="7">
+                <div class="question-meta">🔄 sed 관련 - 7/10</div>
+                <h3>config.txt 파일에서 "debug"라는 단어가 포함된 줄을 모두 삭제하는 명령어는?</h3>
+                <input type="text" class="answer-input" placeholder="명령어를 입력하세요">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="checkAnswer(7)">정답 확인</button>
+                    <button class="btn btn-show-answer" onclick="showAnswer(7)">정답 보기</button>
+                </div>
+                <div class="feedback" id="feedback7"></div>
+                <div class="answer-section" id="answer7">
+                    <h4>✅ 정답:</h4>
+                    <pre>sed '/debug/d' config.txt</pre>
+                    <div class="tip">💡 <strong>/pattern/d</strong>: 패턴이 매치하는 줄 삭제</div>
+                </div>
+            </div>
+
+            <!-- Question 8 -->
+            <div class="question" data-question="8">
+                <div class="question-meta">📂 find 관련 - 8/10</div>
+                <h3>/etc 디렉토리에서 확장자가 .conf인 파일만 찾는 명령어는?</h3>
+                <input type="text" class="answer-input" placeholder="명령어를 입력하세요">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="checkAnswer(8)">정답 확인</button>
+                    <button class="btn btn-show-answer" onclick="showAnswer(8)">정답 보기</button>
+                </div>
+                <div class="feedback" id="feedback8"></div>
+                <div class="answer-section" id="answer8">
+                    <h4>✅ 정답:</h4>
+                    <pre>find /etc -name "*.conf"</pre>
+                    <div class="tip">💡 <strong>-name</strong>: 파일명 패턴으로 검색</div>
+                </div>
+            </div>
+
+            <!-- Question 9 -->
+            <div class="question" data-question="9">
+                <div class="question-meta">🔧 systemctl 관련 - 9/10</div>
+                <h3>kubelet 서비스를 재시작하고 상태를 확인하는 명령어 2개는?</h3>
+                <input type="text" class="answer-input" placeholder="명령어를 입력하세요 (세미콜론으로 구분)">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="checkAnswer(9)">정답 확인</button>
+                    <button class="btn btn-show-answer" onclick="showAnswer(9)">정답 보기</button>
+                </div>
+                <div class="feedback" id="feedback9"></div>
+                <div class="answer-section" id="answer9">
+                    <h4>✅ 정답:</h4>
+                    <pre>systemctl restart kubelet; systemctl status kubelet
+# 또는
+systemctl restart kubelet && systemctl status kubelet</pre>
+                    <div class="tip">💡 <strong>;</strong> 또는 <strong>&&</strong>로 명령어 연결</div>
+                </div>
+            </div>
+
+            <!-- Question 10 -->
+            <div class="question" data-question="10">
+                <div class="question-meta">📋 journalctl 관련 - 10/10</div>
+                <h3>docker 서비스의 최근 10분간 로그를 실시간으로 확인하는 명령어는?</h3>
+                <input type="text" class="answer-input" placeholder="명령어를 입력하세요">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="checkAnswer(10)">정답 확인</button>
+                    <button class="btn btn-show-answer" onclick="showAnswer(10)">정답 보기</button>
+                </div>
+                <div class="feedback" id="feedback10"></div>
+                <div class="answer-section" id="answer10">
+                    <h4>✅ 정답:</h4>
+                    <pre>journalctl -u docker --since "10 minutes ago" -f</pre>
+                    <div class="tip">💡 <strong>-u</strong>: 특정 유닛, <strong>--since</strong>: 시간 범위, <strong>-f</strong>: 실시간 팔로우</div>
+                </div>
+            </div>
+
+            <!-- Score Section -->
+            <div class="score-section" id="scoreSection">
+                <div class="celebration" id="celebrationEmoji">🎉</div>
+                <div class="score-circle" id="scoreCircle">
+                    <span id="scoreText">0/10</span>
+                </div>
+                <h2 id="scoreTitle">퀴즈 완료!</h2>
+                <p id="scoreMessage">모든 문제를 풀어보세요.</p>
+                <div style="margin-top: 30px;">
+                    <button class="btn btn-primary" onclick="resetQuiz()">다시 풀기</button>
+                    <button class="btn btn-secondary" onclick="showAllAnswers()">모든 정답 보기</button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="navigation">
+                <div class="question-counter">
+                    <span id="currentQuestion">1</span> / 10
+                </div>
+                <div>
+                    <button class="btn btn-secondary" onclick="previousQuestion()" id="prevBtn" style="display: none;">이전</button>
+                    <button class="btn btn-primary" onclick="nextQuestion()" id="nextBtn">다음</button>
+                    <button class="btn btn-primary" onclick="showResults()" id="finishBtn" style="display: none;">결과 보기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestionIndex = 1;
+        let answers = {};
+        let score = 0;
+
+        const correctAnswers = {
+            1: ['grep -in "error" /var/log/syslog', 'grep -i -n "error" /var/log/syslog'],
+            2: ['kubectl logs pod-name | grep -E "failed|error"', 'kubectl logs pod-name | grep -E "(failed|error)"'],
+            3: ['kubectl get pods | awk \'NR>1 {print $1}\''],
+            4: ['awk \'$3=="Running" {print $1}\' file.txt'],
+            5: ['awk -F: \'{print $1}\' /etc/passwd'],
+            6: ['sed \'s/nginx:latest/nginx:1.20/g\' deployment.yaml'],
+            7: ['sed \'/debug/d\' config.txt'],
+            8: ['find /etc -name "*.conf"'],
+            9: ['systemctl restart kubelet; systemctl status kubelet', 'systemctl restart kubelet && systemctl status kubelet'],
+            10: ['journalctl -u docker --since "10 minutes ago" -f']
+        };
+
+        const motivationalMessages = {
+            correct: [
+                '🎉 정확합니다! 훌륭해요!',
+                '✨ 완벽해요! 계속 이런 식으로!',
+                '🚀 멋져요! Linux 마스터가 되고 있네요!',
+                '💎 환상적입니다! CKA/CKAD 준비 잘 되고 있어요!',
+                '🏆 대단해요! 이런 실력이면 합격 확실!',
+                '⭐ 정말 잘하고 있어요! 자신감을 가지세요!',
+                '🎯 정확한 명령어예요! 실력이 늘고 있어요!'
+            ],
+            incorrect: [
+                '💪 아쉽지만 괜찮아요! 다시 한 번 도전해보세요!',
+                '🤔 거의 다 왔어요! 정답을 확인하고 다시 시도해보세요!',
+                '📚 실수는 배움의 기회예요! 정답을 보고 학습하세요!',
+                '💡 조금 더 생각해보세요! 힌트를 참고해보세요!',
+                '🎲 틀려도 괜찮아요! 시행착오가 실력을 만들어요!'
+            ]
+        };
+
+        function checkAnswer(questionNum) {
+            const input = document.querySelector(`[data-question="${questionNum}"] .answer-input`);
+            const userAnswer = input.value.trim();
+            const feedback = document.getElementById(`feedback${questionNum}`);
+            
+            if (!userAnswer) {
+                feedback.innerHTML = '❌ 답을 입력해주세요!';
+                feedback.className = 'feedback incorrect';
+                feedback.style.display = 'block';
+                return;
+            }
+
+            answers[questionNum] = userAnswer;
+            const isCorrect = correctAnswers[questionNum].some(correct => 
+                userAnswer.toLowerCase().replace(/\s+/g, ' ') === correct.toLowerCase().replace(/\s+/g, ' ')
+            );
+
+            if (isCorrect) {
+                score++;
+                const message = motivationalMessages.correct[Math.floor(Math.random() * motivationalMessages.correct.length)];
+                feedback.innerHTML = message;
+                feedback.className = 'feedback correct';
+                input.style.borderColor = '#10b981';
+                input.style.backgroundColor = '#dcfce7';
+            } else {
+                const message = motivationalMessages.incorrect[Math.floor(Math.random() * motivationalMessages.incorrect.length)];
+                feedback.innerHTML = `${message}<br><small>정답 보기 버튼을 클릭해서 확인해보세요!</small>`;
+                feedback.className = 'feedback incorrect';
+                input.style.borderColor = '#ef4444';
+            }
+            
+            feedback.style.display = 'block';
+            updateProgress();
+        }
+
+        function showAnswer(questionNum) {
+            const answerSection = document.getElementById(`answer${questionNum}`);
+            answerSection.style.display = answerSection.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < 10) {
+                document.querySelector(`[data-question="${currentQuestionIndex}"]`).classList.remove('active');
+                currentQuestionIndex++;
+                document.querySelector(`[data-question="${currentQuestionIndex}"]`).classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 1) {
+                document.querySelector(`[data-question="${currentQuestionIndex}"]`).classList.remove('active');
+                currentQuestionIndex--;
+                document.querySelector(`[data-question="${currentQuestionIndex}"]`).classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function updateNavigation() {
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex;
+            document.getElementById('prevBtn').style.display = currentQuestionIndex > 1 ? 'inline-block' : 'none';
+            document.getElementById('nextBtn').style.display = currentQuestionIndex < 10 ? 'inline-block' : 'none';
+            document.getElementById('finishBtn').style.display = currentQuestionIndex === 10 ? 'inline-block' : 'none';
+        }
+
+        function updateProgress() {
+            const answered = Object.keys(answers).length;
+            const progress = (answered / 10) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        function showResults() {
+            document.querySelector('.quiz-content').style.display = 'none';
+            document.getElementById('scoreSection').style.display = 'block';
+            
+            const scoreText = document.getElementById('scoreText');
+            const scoreCircle = document.getElementById('scoreCircle');
+            const scoreTitle = document.getElementById('scoreTitle');
+            const scoreMessage = document.getElementById('scoreMessage');
+            const celebration = document.getElementById('celebrationEmoji');
+            
+            scoreText.textContent = `${score}/10`;
+            
+            if (score >= 8) {
+                scoreCircle.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                scoreTitle.textContent = '🥇 우수! 훌륭합니다!';
+                scoreMessage.textContent = '다음 단계로 진행하세요! Linux 도구를 완벽하게 마스터했네요!';
+                celebration.textContent = '🎉🎊✨';
+            } else if (score >= 6) {
+                scoreCircle.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+                scoreTitle.textContent = '🥈 양호! 잘하고 있어요!';
+                scoreMessage.textContent = '틀린 부분을 복습한 후 다음 단계로 진행하세요!';
+                celebration.textContent = '🌟⭐💫';
+            } else {
+                scoreCircle.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                scoreTitle.textContent = '🥉 복습이 필요해요!';
+                scoreMessage.textContent = '학습 내용을 다시 읽어보고 재도전하세요!';
+                celebration.textContent = '💪📚🔥';
+            }
+        }
+
+        function resetQuiz() {
+            currentQuestionIndex = 1;
+            answers = {};
+            score = 0;
+            
+            document.querySelectorAll('.question').forEach(q => q.classList.remove('active'));
+            document.querySelector('[data-question="1"]').classList.add('active');
+            
+            document.querySelectorAll('.answer-input').forEach(input => {
+                input.value = '';
+                input.style.borderColor = '#e5e7eb';
+                input.style.backgroundColor = '#1f2937';
+            });
+            
+            document.querySelectorAll('.feedback').forEach(f => f.style.display = 'none');
+            document.querySelectorAll('.answer-section').forEach(a => a.style.display = 'none');
+            
+            document.querySelector('.quiz-content').style.display = 'block';
+            document.getElementById('scoreSection').style.display = 'none';
+            
+            updateNavigation();
+            updateProgress();
+        }
+
+        function showAllAnswers() {
+            document.querySelectorAll('.answer-section').forEach(section => {
+                section.style.display = 'block';
+            });
+        }
+
+        // 키보드 단축키
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.classList.contains('answer-input')) {
+                const questionNum = parseInt(e.target.closest('.question').dataset.question);
+                checkAnswer(questionNum);
+            }
+        });
+
+        // 초기 설정
+        updateNavigation();
+    </script>
+</body>
+</html>
