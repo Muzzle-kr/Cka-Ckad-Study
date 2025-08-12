@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  linux-practice:
+    build: .
+    container_name: cka-ckad-practice
+    volumes:
+      - .:/study
+      - practice-logs:/var/log/practice
+    stdin_open: true
+    tty: true
+    networks:
+      - study-network
+
+  # 추가 연습용 컨테이너들
+  nginx-server:
+    image: nginx:alpine
+    container_name: practice-nginx
+    ports:
+      - "8080:80"
+    networks:
+      - study-network
+
+  redis-cache:
+    image: redis:alpine
+    container_name: practice-redis
+    networks:
+      - study-network
+
+volumes:
+  practice-logs:
+
+networks:
+  study-network:
+    driver: bridge

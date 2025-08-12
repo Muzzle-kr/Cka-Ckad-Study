@@ -111,8 +111,43 @@ kubectl exec -it <pod-name> -- /bin/bash
 ```
 
 ### 실습 환경
+- **Docker 컨테이너**: 리눅스 명령어 연습용 컨테이너 제공
 - **로컬 클러스터**: minikube 또는 kind 사용
 - **온라인 실습**: Killer.sh, KodeKloud
+
+## 🐳 Docker 학습 환경 사용법
+
+### 빠른 시작
+```bash
+# 학습 환경 설정 및 시작
+./practice-setup.sh
+
+# 학습 컨테이너 접속
+docker-compose exec linux-practice bash
+
+# 예시 파일로 실습
+cd /study/week1/examples
+grep -i error sample-log.txt
+```
+
+### 컨테이너 구성
+- **linux-practice**: 메인 학습 컨테이너 (Ubuntu + kubectl + 학습 도구들)
+- **nginx-server**: 네트워크 실습용 웹서버
+- **redis-cache**: 서비스 연결 실습용 캐시
+
+### 유용한 명령어
+```bash
+# 컨테이너 관리
+docker-compose up -d              # 백그라운드 실행
+docker-compose exec linux-practice bash  # 컨테이너 접속
+docker-compose logs -f            # 로그 실시간 확인
+docker-compose down               # 컨테이너 중지
+
+# 학습 도구
+generate-logs.sh &                # 실습용 로그 생성
+ll                                # ls -la 별칭
+k get pods                        # kubectl 별칭
+```
 
 ---
 
