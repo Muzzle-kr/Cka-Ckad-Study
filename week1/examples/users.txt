@@ -1,0 +1,6 @@
+john:developer:1001:/home/john
+jane:admin:1002:/home/jane
+mike:operator:1003:/home/mike
+sarah:developer:1004:/home/sarah
+tom:admin:1005:/home/tom
+lisa:operator:1006:/home/lisa

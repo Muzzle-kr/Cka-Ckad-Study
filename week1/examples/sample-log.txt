@@ -1,0 +1,15 @@
+2024-01-15 10:30:01 INFO Application started successfully
+2024-01-15 10:30:15 DEBUG Loading configuration from /etc/app/config.yaml
+2024-01-15 10:30:20 INFO Database connection established
+2024-01-15 10:30:25 WARNING High memory usage detected: 85%
+2024-01-15 10:31:00 ERROR Failed to connect to external API: timeout
+2024-01-15 10:31:05 INFO Retrying API connection...
+2024-01-15 10:31:10 ERROR Connection failed again: network unreachable
+2024-01-15 10:31:15 WARNING Switching to fallback mode
+2024-01-15 10:31:20 INFO Fallback mode activated successfully
+2024-01-15 10:31:30 DEBUG Processing user request: getUserData
+2024-01-15 10:31:35 INFO Request processed successfully
+2024-01-15 10:32:00 ERROR Database query failed: table not found
+2024-01-15 10:32:05 WARNING Using cached data instead
+2024-01-15 10:32:10 INFO Response sent to client
+2024-01-15 10:32:15 DEBUG Session cleanup completed
