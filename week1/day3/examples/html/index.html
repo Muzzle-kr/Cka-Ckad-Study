@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Volume Practice</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        h1 { color: #fff; text-align: center; }
+        .volume-demo {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 5px;
+            border-radius: 3px;
+            color: #ffd700;
+        }
+        .example {
+            border-left: 4px solid #ffd700;
+            padding-left: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐳 Docker Volume Practice</h1>
+        
+        <div class="volume-demo">
+            <h2>볼륨 마운트 실습</h2>
+            <p>이 파일은 호스트의 <code>html/</code> 디렉토리에서 컨테이너의 <code>/usr/share/nginx/html/</code>로 마운트되었습니다.</p>
+            
+            <div class="example">
+                <h3>실행 명령어:</h3>
+                <code>docker run -d -v $(pwd)/html:/usr/share/nginx/html:ro -p 8081:80 nginx</code>
+            </div>
+        </div>
+
+        <div class="volume-demo">
+            <h2>실습 과제</h2>
+            <ol>
+                <li>이 파일을 수정해보세요</li>
+                <li>브라우저를 새로고침하여 변경사항을 확인하세요</li>
+                <li>컨테이너를 재시작해도 변경사항이 유지되는지 확인하세요</li>
+            </ol>
+        </div>
+
+        <div class="volume-demo">
+            <h2>도커 명령어 연습</h2>
+            <ul>
+                <li><code>docker exec -it container-name ls /usr/share/nginx/html</code></li>
+                <li><code>docker logs container-name</code></li>
+                <li><code>docker stats container-name</code></li>
+            </ul>
+        </div>
+
+        <p style="text-align: center; margin-top: 40px;">
+            <strong>Docker Volume 실습 완료! 🎉</strong>
+        </p>
+    </div>
+</body>
+</html>
