@@ -1,0 +1,21 @@
+# kind-config.yaml
+# 멀티노드 클러스터 설정 예시
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  image: kindest/node:v1.25.3
+  extraPortMappings:
+  - containerPort: 30000
+    hostPort: 30000
+    protocol: TCP
+  - containerPort: 30080
+    hostPort: 30080
+    protocol: TCP
+  - containerPort: 30090
+    hostPort: 30090
+    protocol: TCP
+- role: worker
+  image: kindest/node:v1.25.3
+- role: worker
+  image: kindest/node:v1.25.3

@@ -1,0 +1,223 @@
+# microservices-app.yaml
+# 마이크로서비스 애플리케이션 예시 (Frontend + Backend)
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+data:
+  default.conf: |
+    upstream backend {
+        server backend-service:8080;
+    }
+    server {
+        listen 80;
+        location /api/ {
+            proxy_pass http://backend/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+            try_files $uri $uri/ /index.html;
+        }
+        location /health {
+            return 200 'Frontend OK';
+            add_header Content-Type text/plain;
+        }
+    }
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Microservices Demo</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .container { max-width: 800px; margin: 0 auto; }
+            button { padding: 10px 20px; margin: 10px; }
+            #result { margin-top: 20px; padding: 20px; background: #f0f0f0; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 Microservices Demo</h1>
+            <p>This is a simple frontend + backend microservices application.</p>
+            <button onclick="callBackend()">Call Backend API</button>
+            <div id="result"></div>
+        </div>
+        <script>
+            async function callBackend() {
+                try {
+                    const response = await fetch('/api/');
+                    const data = await response.json();
+                    document.getElementById('result').innerHTML = 
+                        '<h3>Backend Response:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                } catch (error) {
+                    document.getElementById('result').innerHTML = 
+                        '<h3>Error:</h3><p>' + error.message + '</p>';
+                }
+            }
+        </script>
+    </body>
+    </html>
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+    tier: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        tier: frontend
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config
+          mountPath: /etc/nginx/conf.d
+        - name: html
+          mountPath: /usr/share/nginx/html
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+      volumes:
+      - name: config
+        configMap:
+          name: frontend-config
+          items:
+          - key: default.conf
+            path: default.conf
+      - name: html
+        configMap:
+          name: frontend-config
+          items:
+          - key: index.html
+            path: index.html
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  labels:
+    app: frontend
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30100
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    app: backend
+    tier: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+        tier: backend
+    spec:
+      containers:
+      - name: backend
+        image: node:16-alpine
+        command: ['sh', '-c']
+        args:
+        - |
+          npm install express
+          node -e "
+            const express = require('express');
+            const app = express();
+            const os = require('os');
+            
+            app.get('/', (req, res) => {
+              res.json({
+                message: 'Hello from backend!',
+                hostname: os.hostname(),
+                timestamp: new Date().toISOString(),
+                version: '1.0.0'
+              });
+            });
+            
+            app.get('/health', (req, res) => {
+              res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+            });
+            
+            app.listen(8080, () => {
+              console.log('Backend server running on port 8080');
+            });
+          "
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  labels:
+    app: backend
+spec:
+  selector:
+    app: backend
+  ports:
+  - port: 8080
+    targetPort: 8080
