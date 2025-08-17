@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 5: K8s 리소스 기초 퀴즈</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .quiz-header {
+            background: linear-gradient(135deg, #326ce5 0%, #1e40af 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .quiz-header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .quiz-header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .progress-container {
+            background: rgba(255, 255, 255, 0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: #10b981;
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .quiz-content {
+            padding: 40px;
+        }
+
+        .question-container {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .question-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .question-number {
+            background: #326ce5;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .options {
+            space-y: 12px;
+        }
+
+        .option {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .option:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        .option.selected {
+            background: #dbeafe;
+            border-color: #3b82f6;
+        }
+
+        .option.correct {
+            background: #dcfce7;
+            border-color: #10b981;
+        }
+
+        .option.incorrect {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .option-label {
+            background: #64748b;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .option.correct .option-label {
+            background: #10b981;
+        }
+
+        .option.incorrect .option-label {
+            background: #ef4444;
+        }
+
+        .input-container {
+            margin-bottom: 20px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+            font-family: 'Courier New', monospace;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .text-input.correct {
+            border-color: #10b981;
+            background: #dcfce7;
+        }
+
+        .text-input.incorrect {
+            border-color: #ef4444;
+            background: #fee2e2;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback.correct {
+            background: #dcfce7;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+
+        .feedback.incorrect {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .feedback-header {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .results {
+            text-align: center;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #326ce5;
+        }
+
+        .medal {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .hint-box {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .hint-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .hint-header {
+            font-weight: bold;
+            color: #92400e;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (max-width: 640px) {
+            .quiz-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .quiz-content {
+                padding: 20px;
+            }
+
+            .question-text {
+                font-size: 1.1rem;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <h1>⚙️ Day 5: K8s 리소스 기초 퀴즈</h1>
+            <p>총 10문제 | CKA/CKAD 준비</p>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+
+        <div class="quiz-content">
+            <!-- Question 1 -->
+            <div class="question-container active" data-question="1">
+                <div class="question-header">
+                    <span class="question-number">문제 1</span>
+                </div>
+                <div class="question-text">
+                    Kubernetes에서 배포할 수 있는 가장 작은 단위는 무엇인가요?
+                </div>
+                <div class="options">
+                    <div class="option" data-value="Container">
+                        <span class="option-label">A</span>
+                        Container
+                    </div>
+                    <div class="option" data-value="Pod">
+                        <span class="option-label">B</span>
+                        Pod
+                    </div>
+                    <div class="option" data-value="Deployment">
+                        <span class="option-label">C</span>
+                        Deployment
+                    </div>
+                    <div class="option" data-value="Service">
+                        <span class="option-label">D</span>
+                        Service
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="checkAnswer(1, 'Pod')">정답 확인</button>
+                    <button class="btn btn-secondary" onclick="showHint(1)">💡 힌트</button>
+                </div>
+                <div class="hint-box" id="hint1">
+                    <div class="hint-header">💡 힌트</div>
+                    Pod는 하나 이상의 컨테이너를 그룹화하여 함께 스케줄링되는 단위입니다.
+                </div>
+                <div class="feedback" id="feedback1"></div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-container" data-question="2">
+                <div class="question-header">
+                    <span class="question-number">문제 2</span>
+                </div>
+                <div class="question-text">
+                    nginx 이미지로 3개의 복제본을 가진 Deployment를 생성하는 명령어를 작성하세요.
+                </div>
+                <div class="input-container">
+                    <input type="text" class="text-input" id="answer2" placeholder="kubectl 명령어를 입력하세요">
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="checkTextAnswer(2, ['kubectl create deployment nginx --image=nginx --replicas=3', 'kubectl create deploy nginx --image=nginx --replicas=3'])">정답 확인</button>
+                    <button class="btn btn-secondary" onclick="showHint(2)">💡 힌트</button>
+                </div>
+                <div class="hint-box" id="hint2">
+                    <div class="hint-header">💡 힌트</div>
+                    kubectl create deployment [이름] --image=[이미지] --replicas=[개수] 형식을 사용합니다.
+                </div>
+                <div class="feedback" id="feedback2"></div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-container" data-question="3">
+                <div class="question-header">
+                    <span class="question-number">문제 3</span>
+                </div>
+                <div class="question-text">
+                    Deployment가 Pod를 관리하는 주요 기능이 아닌 것은?
+                </div>
+                <div class="options">
+                    <div class="option" data-value="복제본 관리">
+                        <span class="option-label">A</span>
+                        복제본 관리
+                    </div>
+                    <div class="option" data-value="롤링 업데이트">
+                        <span class="option-label">B</span>
+                        롤링 업데이트
+                    </div>
+                    <div class="option" data-value="로드 밸런싱">
+                        <span class="option-label">C</span>
+                        로드 밸런싱
+                    </div>
+                    <div class="option" data-value="자동 복구">
+                        <span class="option-label">D</span>
+                        자동 복구
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="checkAnswer(3, '로드 밸런싱')">정답 확인</button>
+                    <button class="btn btn-secondary" onclick="showHint(3)">💡 힌트</button>
+                </div>
+                <div class="hint-box" id="hint3">
+                    <div class="hint-header">💡 힌트</div>
+                    로드 밸런싱은 Service의 역할입니다. Deployment는 Pod 관리에 집중합니다.
+                </div>
+                <div class="feedback" id="feedback3"></div>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="question-container" data-question="4">
+                <div class="question-header">
+                    <span class="question-number">문제 4</span>
+                </div>
+                <div class="question-text">
+                    Service의 기본 타입(ClusterIP)의 특징은 무엇인가요?
+                </div>
+                <div class="options">
+                    <div class="option" data-value="외부에서 직접 접근 가능">
+                        <span class="option-label">A</span>
+                        외부에서 직접 접근 가능
+                    </div>
+                    <div class="option" data-value="클러스터 내부에서만 접근 가능">
+                        <span class="option-label">B</span>
+                        클러스터 내부에서만 접근 가능
+                    </div>
+                    <div class="option" data-value="노드의 특정 포트로 접근 가능">
+                        <span class="option-label">C</span>
+                        노드의 특정 포트로 접근 가능
+                    </div>
+                    <div class="option" data-value="클라우드 로드밸런서 생성">
+                        <span class="option-label">D</span>
+                        클라우드 로드밸런서 생성
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="checkAnswer(4, '클러스터 내부에서만 접근 가능')">정답 확인</button>
+                    <button class="btn btn-secondary" onclick="showHint(4)">💡 힌트</button>
+                </div>
+                <div class="hint-box" id="hint4">
+                    <div class="hint-header">💡 힌트</div>
+                    ClusterIP는 내부 통신용으로, 외부 접근은 NodePort나 LoadBalancer를 사용합니다.
+                </div>
+                <div class="feedback" id="feedback4"></div>
+            </div>
+
+            <!-- Question 5 -->
+            <div class="question-container" data-question="5">
+                <div class="question-header">
+                    <span class="question-number">문제 5</span>
+                </div>
+                <div class="question-text">
+                    실행 중인 Pod의 로그를 실시간으로 확인하는 명령어를 작성하세요.
+                </div>
+                <div class="input-container">
+                    <input type="text" class="text-input" id="answer5" placeholder="kubectl 명령어를 입력하세요 (Pod 이름: nginx-pod)">
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="checkTextAnswer(5, ['kubectl logs nginx-pod -f', 'kubectl logs -f nginx-pod'])">정답 확인</button>
+                    <button class="btn btn-secondary" onclick="showHint(5)">💡 힌트</button>
+                </div>
+                <div class="hint-box" id="hint5">
+                    <div class="hint-header">💡 힌트</div>
+                    kubectl logs [Pod이름] -f 형식을 사용합니다. -f 옵션은 실시간 스트리밍을 의미합니다.
+                </div>
+                <div class="feedback" id="feedback5"></div>
+            </div>
+
+            <!-- Question 6 -->
+            <div class="question-container" data-question="6">
+                <div class="question-header">
+                    <span class="question-number">문제 6</span>
+                </div>
+                <div class="question-text">
+                    다음 중 Pod가 여러 컨테이너를 포함할 때의 특징이 아닌 것은?
+                </div>
+                <div class="options">
+                    <div class="option" data-value="같은 IP 주소 공유">
+                        <span class="option-label">A</span>
+                        같은 IP 주소 공유
+                    </div>
+                    <div class="option" data-value="스토리지 볼륨 공유">
+                        <span class="option-label">B</span>
+                        스토리지 볼륨 공유
+                    </div>
+                    <div class="option" data-value="함께 스케줄링됨">
+                        <span class="option-label">C</span>
+                        함께 스케줄링됨
+                    </div>
+                    <div class="option" data-value="독립적인 라이프사이클">
+                        <span class="option-label">D</span>
+                        독립적인 라이프사이클
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="checkAnswer(6, '독립적인 라이프사이클')">정답 확인</button>
+                    <button class="btn btn-secondary" onclick="showHint(6)">💡 힌트</button>
+                </div>
+                <div class="hint-box" id="hint6">
+                    <div class="hint-header">💡 힌트</div>
+                    Pod 내 모든 컨테이너는 운명을 함께하며, 함께 시작되고 함께 종료됩니다.
+                </div>
+                <div class="feedback" id="feedback6"></div>
+            </div>
+
+            <!-- Question 7 -->
+            <div class="question-container" data-question="7">
+                <div class="question-header">
+                    <span class="question-number">문제 7</span>
+                </div>
+                <div class="question-text">
+                    Deployment를 3개에서 5개 복제본으로 스케일링하는 명령어를 작성하세요.
+                </div>
+                <div class="input-container">
+                    <input type="text" class="text-input" id="answer7" placeholder="kubectl 명령어를 입력하세요 (Deployment 이름: web-app)">
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="checkTextAnswer(7, ['kubectl scale deployment web-app --replicas=5', 'kubectl scale deploy web-app --replicas=5'])">정답 확인</button>
+                    <button class="btn btn-secondary" onclick="showHint(7)">💡 힌트</button>
+                </div>
+                <div class="hint-box" id="hint7">
+                    <div class="hint-header">💡 힌트</div>
+                    kubectl scale deployment [이름] --replicas=[개수] 형식을 사용합니다.
+                </div>
+                <div class="feedback" id="feedback7"></div>
+            </div>
+
+            <!-- Question 8 -->
+            <div class="question-container" data-question="8">
+                <div class="question-header">
+                    <span class="question-number">문제 8</span>
+                </div>
+                <div class="question-text">
+                    Service가 Pod에 트래픽을 전달하는 방식은 무엇을 기반으로 하나요?
+                </div>
+                <div class="options">
+                    <div class="option" data-value="Pod 이름">
+                        <span class="option-label">A</span>
+                        Pod 이름
+                    </div>
+                    <div class="option" data-value="Label Selector">
+                        <span class="option-label">B</span>
+                        Label Selector
+                    </div>
+                    <div class="option" data-value="Pod IP">
+                        <span class="option-label">C</span>
+                        Pod IP
+                    </div>
+                    <div class="option" data-value="네임스페이스">
+                        <span class="option-label">D</span>
+                        네임스페이스
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="checkAnswer(8, 'Label Selector')">정답 확인</button>
+                    <button class="btn btn-secondary" onclick="showHint(8)">💡 힌트</button>
+                </div>
+                <div class="hint-box" id="hint8">
+                    <div class="hint-header">💡 힌트</div>
+                    Service의 selector 필드는 특정 라벨을 가진 Pod들을 선택합니다.
+                </div>
+                <div class="feedback" id="feedback8"></div>
+            </div>
+
+            <!-- Question 9 -->
+            <div class="question-container" data-question="9">
+                <div class="question-header">
+                    <span class="question-number">문제 9</span>
+                </div>
+                <div class="question-text">
+                    NodePort 타입 서비스의 포트 범위는 얼마인가요?
+                </div>
+                <div class="options">
+                    <div class="option" data-value="1024-65535">
+                        <span class="option-label">A</span>
+                        1024-65535
+                    </div>
+                    <div class="option" data-value="30000-32767">
+                        <span class="option-label">B</span>
+                        30000-32767
+                    </div>
+                    <div class="option" data-value="8000-9000">
+                        <span class="option-label">C</span>
+                        8000-9000
+                    </div>
+                    <div class="option" data-value="80-8080">
+                        <span class="option-label">D</span>
+                        80-8080
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="checkAnswer(9, '30000-32767')">정답 확인</button>
+                    <button class="btn btn-secondary" onclick="showHint(9)">💡 힌트</button>
+                </div>
+                <div class="hint-box" id="hint9">
+                    <div class="hint-header">💡 힌트</div>
+                    NodePort는 Kubernetes가 예약한 특정 포트 범위를 사용합니다.
+                </div>
+                <div class="feedback" id="feedback9"></div>
+            </div>
+
+            <!-- Question 10 -->
+            <div class="question-container" data-question="10">
+                <div class="question-header">
+                    <span class="question-number">문제 10</span>
+                </div>
+                <div class="question-text">
+                    Deployment에서 Pod 템플릿에 반드시 포함되어야 하는 selector 관련 필드는?
+                </div>
+                <div class="input-container">
+                    <input type="text" class="text-input" id="answer10" placeholder="YAML 필드명을 입력하세요">
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-primary" onclick="checkTextAnswer(10, ['matchLabels', 'match labels', 'matchlabels'])">정답 확인</button>
+                    <button class="btn btn-secondary" onclick="showHint(10)">💡 힌트</button>
+                </div>
+                <div class="hint-box" id="hint10">
+                    <div class="hint-header">💡 힌트</div>
+                    Deployment의 spec.selector 하위에서 Pod를 선택하는 라벨 매칭 필드입니다.
+                </div>
+                <div class="feedback" id="feedback10"></div>
+            </div>
+
+            <!-- Results -->
+            <div class="results" id="results">
+                <div class="medal" id="medal">🏆</div>
+                <h2>퀴즈 완료!</h2>
+                <div class="score-display" id="scoreDisplay">0/10</div>
+                <div id="scoreMessage"></div>
+                <div class="buttons">
+                    <button class="btn btn-success" onclick="restartQuiz()">🔄 다시 도전하기</button>
+                    <button class="btn btn-secondary" onclick="showAllAnswers()">📝 모든 정답 보기</button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="navigation">
+                <button class="btn btn-secondary" id="prevBtn" onclick="previousQuestion()" disabled>⬅️ 이전</button>
+                <span id="questionProgress">1 / 10</span>
+                <button class="btn btn-secondary" id="nextBtn" onclick="nextQuestion()">다음 ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = 1;
+        let totalQuestions = 10;
+        let answers = {};
+        let userAnswers = {};
+
+        // 정답 데이터
+        const correctAnswers = {
+            1: 'Pod',
+            2: ['kubectl create deployment nginx --image=nginx --replicas=3', 'kubectl create deploy nginx --image=nginx --replicas=3'],
+            3: '로드 밸런싱',
+            4: '클러스터 내부에서만 접근 가능',
+            5: ['kubectl logs nginx-pod -f', 'kubectl logs -f nginx-pod'],
+            6: '독립적인 라이프사이클',
+            7: ['kubectl scale deployment web-app --replicas=5', 'kubectl scale deploy web-app --replicas=5'],
+            8: 'Label Selector',
+            9: '30000-32767',
+            10: ['matchLabels', 'match labels', 'matchlabels']
+        };
+
+        const explanations = {
+            1: "Pod는 Kubernetes에서 배포할 수 있는 가장 작은 단위입니다. 하나 이상의 컨테이너를 포함할 수 있습니다.",
+            2: "kubectl create deployment 명령어로 Deployment를 생성하고, --replicas 옵션으로 복제본 수를 지정합니다.",
+            3: "로드 밸런싱은 Service의 역할입니다. Deployment는 Pod 관리(복제본, 업데이트, 복구)에 집중합니다.",
+            4: "ClusterIP는 기본 Service 타입으로, 클러스터 내부에서만 접근 가능한 내부 IP를 제공합니다.",
+            5: "kubectl logs 명령어에 -f 옵션을 사용하면 실시간으로 로그를 스트리밍할 수 있습니다.",
+            6: "Pod 내 모든 컨테이너는 같은 라이프사이클을 가지며 함께 시작되고 종료됩니다.",
+            7: "kubectl scale 명령어로 Deployment의 복제본 수를 동적으로 변경할 수 있습니다.",
+            8: "Service는 selector의 matchLabels를 통해 특정 라벨을 가진 Pod들을 선택하여 트래픽을 전달합니다.",
+            9: "NodePort 서비스는 30000-32767 범위의 포트를 사용하여 외부에서 접근할 수 있게 합니다.",
+            10: "Deployment의 spec.selector.matchLabels는 관리할 Pod를 선택하는 필수 필드입니다."
+        };
+
+        function updateProgress() {
+            const progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('questionProgress').textContent = `${currentQuestion} / ${totalQuestions}`;
+        }
+
+        function showQuestion(questionNum) {
+            document.querySelectorAll('.question-container').forEach(container => {
+                container.classList.remove('active');
+            });
+            document.querySelector(`[data-question="${questionNum}"]`).classList.add('active');
+            
+            currentQuestion = questionNum;
+            updateProgress();
+            updateNavigation();
+        }
+
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentQuestion === 1;
+            
+            if (currentQuestion === totalQuestions) {
+                nextBtn.textContent = '결과 보기 🏁';
+                nextBtn.onclick = showResults;
+            } else {
+                nextBtn.textContent = '다음 ➡️';
+                nextBtn.onclick = nextQuestion;
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < totalQuestions) {
+                showQuestion(currentQuestion + 1);
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 1) {
+                showQuestion(currentQuestion - 1);
+            }
+        }
+
+        function showHint(questionNum) {
+            const hint = document.getElementById(`hint${questionNum}`);
+            hint.classList.toggle('show');
+        }
+
+        function checkAnswer(questionNum, correctAnswer) {
+            const selected = document.querySelector(`[data-question="${questionNum}"] .option.selected`);
+            if (!selected) {
+                alert('답을 선택해주세요!');
+                return;
+            }
+
+            const userAnswer = selected.getAttribute('data-value');
+            userAnswers[questionNum] = userAnswer;
+            
+            const options = document.querySelectorAll(`[data-question="${questionNum}"] .option`);
+            const checkButton = document.querySelector(`[data-question="${questionNum}"] .btn-primary`);
+            
+            options.forEach(option => {
+                if (option.getAttribute('data-value') === correctAnswer) {
+                    option.classList.add('correct');
+                } else if (option.classList.contains('selected')) {
+                    option.classList.add('incorrect');
+                }
+            });
+
+            const isCorrect = userAnswer === correctAnswer;
+            if (isCorrect) {
+                answers[questionNum] = true;
+                options.forEach(option => {
+                    option.style.pointerEvents = 'none';
+                });
+                checkButton.disabled = true;
+                checkButton.textContent = '정답입니다!';
+                checkButton.style.backgroundColor = '#10b981';
+            } else {
+                // 틀렸을 때는 다시 선택할 수 있도록 함
+                checkButton.textContent = '다시 시도하기';
+                // 선택된 옵션 초기화
+                setTimeout(() => {
+                    options.forEach(option => {
+                        option.classList.remove('selected', 'incorrect');
+                    });
+                }, 1000);
+            }
+
+            showFeedback(questionNum, isCorrect, explanations[questionNum]);
+            updateProgress();
+        }
+
+        function checkTextAnswer(questionNum, correctAnswers) {
+            const input = document.getElementById(`answer${questionNum}`);
+            const userAnswer = input.value.trim();
+            const checkButton = document.querySelector(`[data-question="${questionNum}"] .btn-primary`);
+            
+            if (!userAnswer) {
+                alert('답을 입력해주세요!');
+                return;
+            }
+
+            userAnswers[questionNum] = userAnswer;
+            
+            const isCorrect = correctAnswers.some(answer => 
+                userAnswer.toLowerCase() === answer.toLowerCase()
+            );
+
+            if (isCorrect) {
+                answers[questionNum] = true;
+                input.classList.add('correct');
+                input.disabled = true;
+                checkButton.disabled = true;
+                checkButton.textContent = '정답입니다!';
+                checkButton.style.backgroundColor = '#10b981';
+            } else {
+                input.classList.add('incorrect');
+                checkButton.textContent = '다시 시도하기';
+                // 틀렸을 때는 다시 입력할 수 있도록 함
+                setTimeout(() => {
+                    input.classList.remove('incorrect');
+                    input.value = '';
+                }, 1000);
+            }
+
+            showFeedback(questionNum, isCorrect, explanations[questionNum]);
+            updateProgress();
+        }
+
+        function showFeedback(questionNum, isCorrect, explanation) {
+            const feedback = document.getElementById(`feedback${questionNum}`);
+            feedback.className = `feedback show ${isCorrect ? 'correct' : 'incorrect'}`;
+            
+            const icon = isCorrect ? '🎉' : '❌';
+            const title = isCorrect ? '정답입니다!' : '틀렸습니다!';
+            
+            let correctAnswerText = '';
+            const correct = correctAnswers[questionNum];
+            if (Array.isArray(correct)) {
+                correctAnswerText = `정답: ${correct[0]}`;
+            } else {
+                correctAnswerText = `정답: ${correct}`;
+            }
+            
+            feedback.innerHTML = `
+                <div class="feedback-header">${icon} ${title}</div>
+                <div><strong>${correctAnswerText}</strong></div>
+                <div style="margin-top: 10px;">${explanation}</div>
+            `;
+        }
+
+        function showResults() {
+            document.querySelector('.quiz-content .navigation').style.display = 'none';
+            document.querySelectorAll('.question-container').forEach(container => {
+                container.style.display = 'none';
+            });
+
+            const score = Object.keys(answers).length;
+            const results = document.getElementById('results');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const scoreMessage = document.getElementById('scoreMessage');
+            const medal = document.getElementById('medal');
+
+            scoreDisplay.textContent = `${score}/${totalQuestions}`;
+
+            let message = '';
+            let medalEmoji = '';
+
+            if (score >= 8) {
+                medalEmoji = '🥇';
+                message = '완벽합니다! K8s 리소스를 아주 잘 이해하고 있습니다!';
+            } else if (score >= 6) {
+                medalEmoji = '🥈';
+                message = '좋습니다! 기본 개념은 잘 알고 있습니다.';
+            } else if (score >= 4) {
+                medalEmoji = '🥉';
+                message = '괜찮습니다! 좀 더 학습하면 완벽해질 거예요.';
+            } else {
+                medalEmoji = '📚';
+                message = '학습 자료를 다시 복습해보세요!';
+            }
+
+            medal.textContent = medalEmoji;
+            scoreMessage.textContent = message;
+            results.classList.add('show');
+        }
+
+        function restartQuiz() {
+            currentQuestion = 1;
+            answers = {};
+            userAnswers = {};
+
+            document.querySelectorAll('.option').forEach(option => {
+                option.classList.remove('selected', 'correct', 'incorrect');
+                option.style.pointerEvents = 'auto';
+            });
+
+            document.querySelectorAll('.text-input').forEach(input => {
+                input.value = '';
+                input.classList.remove('correct', 'incorrect');
+                input.disabled = false;
+            });
+
+            document.querySelectorAll('.btn-primary').forEach(button => {
+                button.disabled = false;
+                button.textContent = '정답 확인';
+                button.style.backgroundColor = '#3b82f6';
+            });
+
+            document.querySelectorAll('.feedback').forEach(feedback => {
+                feedback.classList.remove('show');
+            });
+
+            document.querySelectorAll('.hint-box').forEach(hint => {
+                hint.classList.remove('show');
+            });
+
+            document.getElementById('results').classList.remove('show');
+            document.querySelector('.quiz-content .navigation').style.display = 'flex';
+            
+            showQuestion(1);
+        }
+
+        function showAllAnswers() {
+            let answersText = 'K8s 리소스 기초 퀴즈 정답:\n\n';
+            
+            const answersList = {
+                1: 'Pod',
+                2: 'kubectl create deployment nginx --image=nginx --replicas=3',
+                3: '로드 밸런싱',
+                4: '클러스터 내부에서만 접근 가능',
+                5: 'kubectl logs nginx-pod -f',
+                6: '독립적인 라이프사이클',
+                7: 'kubectl scale deployment web-app --replicas=5',
+                8: 'Label Selector',
+                9: '30000-32767',
+                10: 'matchLabels'
+            };
+
+            for (let i = 1; i <= 10; i++) {
+                answersText += `${i}. ${answersList[i]}\n`;
+            }
+
+            alert(answersText);
+        }
+
+        // 옵션 클릭 이벤트
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.option')) {
+                const option = e.target.closest('.option');
+                const questionContainer = option.closest('.question-container');
+                
+                // 이미 답이 확인된 경우 클릭 무시
+                if (option.style.pointerEvents === 'none') return;
+                
+                // 같은 질문의 다른 옵션들에서 selected 제거
+                questionContainer.querySelectorAll('.option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // 클릭된 옵션에 selected 추가
+                option.classList.add('selected');
+            }
+        });
+
+        // Enter 키로 정답 확인
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const activeQuestion = document.querySelector('.question-container.active');
+                const questionNum = parseInt(activeQuestion.getAttribute('data-question'));
+                const checkButton = activeQuestion.querySelector('.btn-primary');
+                
+                if (checkButton && !checkButton.disabled) {
+                    checkButton.click();
+                }
+            }
+        });
+
+        // 초기화
+        updateProgress();
+        updateNavigation();
+    </script>
+</body>
+</html>

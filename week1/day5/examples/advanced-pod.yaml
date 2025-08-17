@@ -1,0 +1,40 @@
+# advanced-pod.yaml
+# 리소스 제한과 환경변수가 포함된 Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: advanced-nginx
+  labels:
+    app: nginx
+    version: v1.21
+    tier: frontend
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    env:
+    - name: ENV
+      value: "production"
+    - name: DEBUG
+      value: "false"
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 30
+      periodSeconds: 10
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 5

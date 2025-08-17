@@ -1,0 +1,15 @@
+# simple-pod.yaml
+# 가장 기본적인 Pod 예시
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-nginx
+  labels:
+    app: nginx
+    environment: development
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
