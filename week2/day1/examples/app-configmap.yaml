@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: default
+data:
+  # 애플리케이션 기본 설정
+  database_url: "postgresql://db:5432/myapp"
+  log_level: "debug"
+  max_connections: "100"
+  app_name: "my-web-application"
+  version: "v1.0.0"
+  
+  # 애플리케이션 설정 파일
+  application.properties: |
+    # Database Configuration
+    spring.datasource.url=jdbc:postgresql://db:5432/myapp
+    spring.datasource.driver-class-name=org.postgresql.Driver
+    spring.jpa.hibernate.ddl-auto=update
+    
+    # Server Configuration
+    server.port=8080
+    server.servlet.context-path=/api
+    
+    # Logging Configuration
+    logging.level.root=DEBUG
+    logging.level.org.springframework=INFO
+    logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} - %msg%n
+    
+    # Application Features
+    feature.user-registration=true
+    feature.email-notifications=true
+    feature.advanced-analytics=false
+  
+  # Redis 설정
+  redis.conf: |
+    # Redis Configuration
+    port 6379
+    bind 127.0.0.1
+    timeout 300
+    keepalive 60
+    maxmemory 256mb
+    maxmemory-policy allkeys-lru
+  
+  # 환경별 설정
+  environment: "development"
+  debug_mode: "true"
+  api_rate_limit: "1000"

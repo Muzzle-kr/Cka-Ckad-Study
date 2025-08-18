@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  labels:
+    app: nginx-server
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    
+    # 볼륨 마운트 설정
+    volumeMounts:
+    # nginx.conf 파일을 특정 경로에 마운트
+    - name: nginx-config-volume
+      mountPath: /etc/nginx/nginx.conf
+      subPath: nginx.conf
+      readOnly: true
+    
+    # 애플리케이션 설정을 디렉토리에 마운트
+    - name: app-config-volume
+      mountPath: /app/config
+      readOnly: true
+    
+    # Redis 설정 파일 마운트
+    - name: redis-config-volume
+      mountPath: /etc/redis/redis.conf
+      subPath: redis.conf
+      readOnly: true
+    
+    # 리소스 제한
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "100m"
+      limits:
+        memory: "64Mi"
+        cpu: "200m"
+  
+  # 볼륨 정의
+  volumes:
+  # nginx 설정용 ConfigMap
+  - name: nginx-config-volume
+    configMap:
+      name: nginx-config
+      defaultMode: 0644
+  
+  # 애플리케이션 설정용 ConfigMap  
+  - name: app-config-volume
+    configMap:
+      name: app-config
+      defaultMode: 0644
+      # 특정 키만 선택해서 마운트
+      items:
+      - key: application.properties
+        path: application.properties
+      - key: environment
+        path: env
+      - key: debug_mode
+        path: debug
+  
+  # Redis 설정용 ConfigMap
+  - name: redis-config-volume
+    configMap:
+      name: app-config
+      defaultMode: 0644
+      items:
+      - key: redis.conf
+        path: redis.conf
+  
+  restartPolicy: Always

@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+  labels:
+    app: web-app
+spec:
+  containers:
+  - name: web-app
+    image: nginx:latest
+    ports:
+    - containerPort: 8080
+    
+    # 개별 환경변수로 ConfigMap 사용
+    env:
+    - name: DATABASE_URL
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: database_url
+    - name: LOG_LEVEL
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: log_level
+    - name: APP_NAME
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: app_name
+    - name: VERSION
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: version
+    
+    # ConfigMap의 모든 키를 환경변수로 가져오기
+    envFrom:
+    - configMapRef:
+        name: app-config
+        optional: false
+    
+    # 리소스 제한
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+  
+  restartPolicy: Always
