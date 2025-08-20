@@ -1,0 +1,76 @@
+# 보안 시나리오 데모
+---
+# 일반 개발자 - ConfigMap만 접근 가능
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: development
+  name: developer-role
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "pods"]
+  verbs: ["get", "list", "create", "update"]
+# Secret은 접근 불가!
+
+---
+# 개발자용 ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: development
+  name: developer
+
+---
+# Role과 ServiceAccount 연결
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: development
+  name: developer-binding
+subjects:
+- kind: ServiceAccount
+  name: developer
+  namespace: development
+roleRef:
+  kind: Role
+  name: developer-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# 운영팀 - Secret까지 접근 가능
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: production
+  name: ops-role
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets", "pods"]
+  verbs: ["*"]
+
+---
+# 실제 애플리케이션에서 사용
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-app
+spec:
+  serviceAccountName: developer  # 개발자 권한으로 실행
+  containers:
+  - name: app
+    image: nginx
+    env:
+    # ConfigMap은 접근 가능
+    - name: APP_CONFIG
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: database_url
+    
+    # Secret은 Pod에서는 사용 가능하지만
+    # 개발자가 직접 kubectl로 Secret을 볼 수는 없음
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: password

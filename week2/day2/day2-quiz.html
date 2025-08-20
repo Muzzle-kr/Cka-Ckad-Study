@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Day 1 퀴즈: ConfigMap 기초</title>
+    <title>Day 2 퀴즈: Secret 관리</title>
     <style>
         * {
             margin: 0;
@@ -29,7 +29,7 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
             color: white;
             padding: 30px;
             text-align: center;
@@ -70,7 +70,7 @@
             border-radius: 12px;
             padding: 30px;
             margin-bottom: 30px;
-            border-left: 5px solid #4f46e5;
+            border-left: 5px solid #dc2626;
             display: none;
         }
         
@@ -106,7 +106,7 @@
         
         .answer-input:focus {
             outline: none;
-            border-color: #4f46e5;
+            border-color: #dc2626;
             background: white;
         }
         
@@ -131,9 +131,9 @@
         }
         
         .option.selected {
-            background: #ede9fe;
-            border-color: #8b5cf6;
-            color: #5b21b6;
+            background: #fef2f2;
+            border-color: #dc2626;
+            color: #991b1b;
         }
         
         .option.correct {
@@ -149,7 +149,7 @@
         }
         
         .check-button {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
             color: white;
             border: none;
             padding: 15px 30px;
@@ -163,7 +163,7 @@
         
         .check-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.3);
         }
         
         .check-button:disabled {
@@ -300,7 +300,7 @@
         }
         
         .restart-button {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
             color: white;
             border: none;
             padding: 15px 40px;
@@ -313,7 +313,7 @@
         
         .restart-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.3);
         }
         
         .code-block {
@@ -358,7 +358,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>⚙️ Day 1: ConfigMap 기초 퀴즈</h1>
+            <h1>🔐 Day 2: Secret 관리 퀴즈</h1>
             <p>총 10문제 | CKA/CKAD 준비</p>
             <div class="progress-bar">
                 <div class="progress-fill"></div>
@@ -372,213 +372,222 @@
             <!-- 문제 1: 객관식 -->
             <div class="question active" data-question="1" data-type="multiple">
                 <div class="question-meta">문제 1/10 - 개념 이해</div>
-                <h3>ConfigMap에 대한 설명으로 가장 적절한 것은?</h3>
+                <h3>Secret과 ConfigMap의 주요 차이점으로 가장 적절한 것은?</h3>
                 <div class="options">
-                    <div class="option" data-answer="A">A) 민감한 정보(비밀번호, API 키)를 저장하는 Kubernetes 리소스</div>
-                    <div class="option" data-answer="B">B) Pod의 컨테이너 이미지를 관리하는 리소스</div>
-                    <div class="option" data-answer="C">C) key-value 형태로 비민감한 설정 데이터를 저장하는 리소스</div>
-                    <div class="option" data-answer="D">D) 네트워크 설정을 관리하는 서비스 리소스</div>
+                    <div class="option" data-answer="A">A) Secret은 평문으로 저장되고 ConfigMap은 암호화되어 저장된다</div>
+                    <div class="option" data-answer="B">B) Secret은 Base64로 인코딩되어 저장되고 민감한 정보를 다룬다</div>
+                    <div class="option" data-answer="C">C) Secret은 1GB까지 저장 가능하고 ConfigMap은 1MB 제한이다</div>
+                    <div class="option" data-answer="D">D) Secret은 환경변수로만 사용 가능하다</div>
                 </div>
                 <div class="feedback correct">
-                    <strong>🎉 정답입니다!</strong><br> 정답: C) key-value 형태로 비민감한 설정 데이터를 저장하는 리소스<br> ConfigMap은 애플리케이션 설정, 환경변수, 설정 파일 등 비민감한 데이터를 저장합니다. 민감한 정보는 Secret을 사용해야 합니다.
+                    <strong>🎉 정답입니다!</strong><br> 정답: B) Secret은 Base64로 인코딩되어 저장되고 민감한 정보를 다룬다<br> Secret은 비밀번호, API 키 등 민감한 데이터를 Base64 인코딩하여 저장합니다. ConfigMap은 비민감한 설정 데이터를 평문으로 저장합니다.
                 </div>
                 <div class="feedback incorrect">
-                    <strong>❌ 틀렸습니다.</strong><br> ConfigMap은 비민감한 설정 데이터를 key-value 형태로 저장하는 리소스입니다. 민감한 정보는 Secret을 사용합니다.
+                    <strong>❌ 틀렸습니다.</strong><br> Secret은 민감한 정보를 Base64로 인코딩하여 저장하며, ConfigMap은 비민감한 설정을 평문으로 저장합니다.
                 </div>
                 <div class="hint">
-                    💡 힌트: ConfigMap의 'Config'는 설정(Configuration)을 의미하며, 보안이 필요하지 않은 설정 정보를 저장합니다.
+                    💡 힌트: Secret의 'secret'은 '비밀'을 의미하며, 보안이 중요한 데이터를 다룹니다.
                 </div>
             </div>
 
             <!-- 문제 2: 명령어 -->
             <div class="question" data-question="2" data-type="command">
-                <div class="question-meta">문제 2/10 - 명령어 실습</div>
-                <h3>리터럴 값으로 ConfigMap을 생성하는 명령어를 작성하세요.</h3>
+                <div class="question-meta">문제 2/10 - Secret 생성</div>
+                <h3>Generic Secret을 생성하는 명령어를 작성하세요.</h3>
                 <p><strong>조건:</strong></p>
                 <ul style="margin: 15px 0; padding-left: 20px;">
-                    <li>ConfigMap 이름: app-settings</li>
-                    <li>키-값: database_url=postgresql://db:5432/myapp</li>
-                    <li>키-값: log_level=debug</li>
+                    <li>Secret 이름: api-secret</li>
+                    <li>키-값: api_key=abc123</li>
+                    <li>키-값: token=xyz789</li>
                 </ul>
-                <input type="text" class="answer-input" placeholder="kubectl create configmap ...">
+                <input type="text" class="answer-input" placeholder="kubectl create secret ...">
                 <div class="feedback correct">
-                    <strong>🎉 정답입니다!</strong><br> 정답: kubectl create configmap app-settings --from-literal=database_url=postgresql://db:5432/myapp --from-literal=log_level=debug<br> --from-literal 옵션을 사용하여 각 key-value 쌍을 직접 명령어에 지정할 수 있습니다.
+                    <strong>🎉 정답입니다!</strong><br> 정답: kubectl create secret generic api-secret --from-literal=api_key=abc123 --from-literal=token=xyz789<br> --from-literal 옵션을 사용하여 각 key-value 쌍을 직접 명령어에 지정할 수 있습니다.
                 </div>
                 <div class="feedback incorrect">
-                    <strong>❌ 틀렸습니다.</strong><br> kubectl create configmap 명령어와 --from-literal 옵션을 사용해야 합니다.
+                    <strong>❌ 틀렸습니다.</strong><br> kubectl create secret generic 명령어와 --from-literal 옵션을 사용해야 합니다.
                 </div>
                 <div class="hint">
-                    💡 힌트: kubectl create configmap [이름] --from-literal=key1=value1 --from-literal=key2=value2 형식을 사용하세요.
+                    💡 힌트: kubectl create secret generic [이름] --from-literal=key1=value1 --from-literal=key2=value2 형식을 사용하세요.
                 </div>
             </div>
 
             <!-- 문제 3: 객관식 -->
             <div class="question" data-question="3" data-type="multiple">
-                <div class="question-meta">문제 3/10 - 사용 방법</div>
-                <h3>Pod에서 ConfigMap을 활용하는 방법이 아닌 것은?</h3>
+                <div class="question-meta">문제 3/10 - Secret 타입</div>
+                <h3>Docker Registry 인증 정보를 저장하는 Secret 타입은?</h3>
                 <div class="options">
-                    <div class="option" data-answer="A">A) 환경변수로 주입</div>
-                    <div class="option" data-answer="B">B) 볼륨으로 마운트</div>
-                    <div class="option" data-answer="C">C) 명령줄 인수로 전달</div>
-                    <div class="option" data-answer="D">D) 컨테이너 이미지로 빌드</div>
+                    <div class="option" data-answer="A">A) Opaque</div>
+                    <div class="option" data-answer="B">B) kubernetes.io/dockerconfigjson</div>
+                    <div class="option" data-answer="C">C) kubernetes.io/tls</div>
+                    <div class="option" data-answer="D">D) kubernetes.io/service-account-token</div>
                 </div>
                 <div class="feedback correct">
-                    <strong>🎉 정답입니다!</strong><br> 정답: D) 컨테이너 이미지로 빌드<br> ConfigMap은 런타임에 Pod에 주입되는 설정입니다. 컨테이너 이미지 빌드 시에는 사용되지 않습니다.
+                    <strong>🎉 정답입니다!</strong><br> 정답: B) kubernetes.io/dockerconfigjson<br> Docker Registry 인증 정보는 kubernetes.io/dockerconfigjson 타입으로 저장되며, imagePullSecrets에서 사용됩니다.
                 </div>
                 <div class="feedback incorrect">
-                    <strong>❌ 틀렸습니다.</strong><br> ConfigMap은 환경변수, 볼륨 마운트, 명령줄 인수로 사용 가능하지만 컨테이너 이미지 빌드와는 관련이 없습니다.
+                    <strong>❌ 틀렸습니다.</strong><br> Docker Registry 인증 정보는 kubernetes.io/dockerconfigjson 타입을 사용합니다.
                 </div>
                 <div class="hint">
-                    💡 힌트: ConfigMap은 런타임에 Pod에 설정을 제공하는 방법을 생각해보세요.
+                    💡 힌트: Docker의 config.json 파일과 관련된 타입명을 생각해보세요.
                 </div>
             </div>
 
             <!-- 문제 4: 명령어 -->
             <div class="question" data-question="4" data-type="command">
-                <div class="question-meta">문제 4/10 - 조회 명령어</div>
-                <h3>ConfigMap의 데이터 내용을 YAML 형식으로 확인하는 명령어를 작성하세요.</h3>
-                <p><strong>조건:</strong> ConfigMap 이름은 my-config입니다.</p>
-                <input type="text" class="answer-input" placeholder="kubectl get ...">
+                <div class="question-meta">문제 4/10 - Docker Registry Secret</div>
+                <h3>Docker Registry Secret을 생성하는 명령어를 작성하세요.</h3>
+                <p><strong>조건:</strong></p>
+                <ul style="margin: 15px 0; padding-left: 20px;">
+                    <li>Secret 이름: my-registry</li>
+                    <li>서버: docker.io</li>
+                    <li>사용자명: myuser</li>
+                    <li>비밀번호: mypass</li>
+                </ul>
+                <input type="text" class="answer-input" placeholder="kubectl create secret docker-registry ...">
                 <div class="feedback correct">
-                    <strong>🎉 정답입니다!</strong><br> 정답: kubectl get configmap my-config -o yaml<br> -o yaml 옵션을 사용하여 ConfigMap의 전체 내용을 YAML 형식으로 볼 수 있습니다.
+                    <strong>🎉 정답입니다!</strong><br> 정답: kubectl create secret docker-registry my-registry --docker-server=docker.io --docker-username=myuser --docker-password=mypass<br> docker-registry 타입 Secret 생성 시 서버, 사용자명, 비밀번호를 지정할 수 있습니다.
                 </div>
                 <div class="feedback incorrect">
-                    <strong>❌ 틀렸습니다.</strong><br> kubectl get configmap [이름] -o yaml 형식을 사용해야 합니다.
+                    <strong>❌ 틀렸습니다.</strong><br> kubectl create secret docker-registry 명령어와 --docker-server, --docker-username, --docker-password 옵션을 사용해야 합니다.
                 </div>
                 <div class="hint">
-                    💡 힌트: kubectl get 명령어에 -o yaml 옵션을 추가하세요.
+                    💡 힌트: docker-registry 타입과 --docker-* 옵션들을 사용하세요.
                 </div>
             </div>
 
-            <!-- 문제 5: 코드 작성 -->
-            <div class="question" data-question="5" data-type="yaml">
-                <div class="question-meta">문제 5/10 - YAML 작성</div>
-                <h3>다음 ConfigMap YAML에서 누락된 부분을 채우세요.</h3>
-                <div class="code-block">apiVersion: v1 kind: ConfigMap metadata: name: web-config data: app_name: "my-web-app" port: "8080" ___________: | server.port=8080 server.host=0.0.0.0
-                </div>
-                <p><strong>빈 칸에 들어갈 키 이름은?</strong> (설정 파일 내용을 저장하는 적절한 키 이름)</p>
-                <input type="text" class="answer-input" placeholder="키 이름을 입력하세요">
+            <!-- 문제 5: 명령어 -->
+            <div class="question" data-question="5" data-type="command">
+                <div class="question-meta">문제 5/10 - Secret 값 확인</div>
+                <h3>Secret의 특정 키 값을 Base64 디코딩해서 확인하는 명령어를 작성하세요.</h3>
+                <p><strong>조건:</strong> Secret 이름은 db-secret, 키는 password입니다.</p>
+                <input type="text" class="answer-input" placeholder="kubectl get secret ...">
                 <div class="feedback correct">
-                    <strong>🎉 정답입니다!</strong><br> 올바른 답안입니다. 멀티라인 설정 파일은 파이프(|) 문자를 사용하여 저장할 수 있습니다.
+                    <strong>🎉 정답입니다!</strong><br> 정답: kubectl get secret db-secret -o jsonpath='{.data.password}' | base64 -d<br> jsonpath로 특정 키의 값을 추출하고 base64 -d로 디코딩할 수 있습니다.
                 </div>
                 <div class="feedback incorrect">
-                    <strong>❌ 틀렸습니다.</strong><br> 설정 파일을 나타내는 적절한 키 이름을 생각해보세요. 예: application.properties, config.properties, server.conf 등
+                    <strong>❌ 틀렸습니다.</strong><br> jsonpath를 사용해서 특정 키를 추출하고 base64 -d로 디코딩해야 합니다.
                 </div>
                 <div class="hint">
-                    💡 힌트: 일반적으로 Java 애플리케이션에서 사용하는 설정 파일명을 생각해보세요.
+                    💡 힌트: -o jsonpath='{.data.키이름}' 옵션과 파이프(|)를 사용해서 base64 -d로 디코딩하세요.
                 </div>
             </div>
 
             <!-- 문제 6: 객관식 -->
             <div class="question" data-question="6" data-type="multiple">
-                <div class="question-meta">문제 6/10 - 환경변수 주입</div>
-                <h3>Pod에서 ConfigMap의 모든 키를 환경변수로 가져오는 YAML 구문은?</h3>
+                <div class="question-meta">문제 6/10 - YAML 작성</div>
+                <h3>YAML에서 Secret 값을 자동으로 Base64 인코딩하는 필드는?</h3>
+                <div class="options">
+                    <div class="option" data-answer="A">A) data</div>
+                    <div class="option" data-answer="B">B) stringData</div>
+                    <div class="option" data-answer="C">C) secretData</div>
+                    <div class="option" data-answer="D">D) encodedData</div>
+                </div>
+                <div class="feedback correct">
+                    <strong>🎉 정답입니다!</strong><br> 정답: B) stringData<br> stringData 필드를 사용하면 평문 값을 입력해도 Kubernetes가 자동으로 Base64 인코딩합니다.
+                </div>
+                <div class="feedback incorrect">
+                    <strong>❌ 틀렸습니다.</strong><br> stringData 필드는 평문 값을 자동으로 Base64 인코딩합니다. data 필드는 이미 인코딩된 값을 사용합니다.
+                </div>
+                <div class="hint">
+                    💡 힌트: 'string'이라는 단어가 들어간 필드명을 생각해보세요.
+                </div>
+            </div>
+
+            <!-- 문제 7: 객관식 -->
+            <div class="question" data-question="7" data-type="multiple">
+                <div class="question-meta">문제 7/10 - Pod에서 Secret 사용</div>
+                <h3>Pod에서 Secret의 모든 키를 환경변수로 가져오는 YAML 구문은?</h3>
                 <div class="options">
                     <div class="option" data-answer="A">
                         A)
-                        <div class="code-block">env: - name: ALL_CONFIG valueFrom: configMapRef: name: my-config</div>
+                        <div class="code-block">env: - name: ALL_SECRET valueFrom: secretRef: name: my-secret</div>
                     </div>
                     <div class="option" data-answer="B">
                         B)
-                        <div class="code-block">envFrom: - configMapRef: name: my-config</div>
+                        <div class="code-block">envFrom: - secretRef: name: my-secret</div>
                     </div>
                     <div class="option" data-answer="C">
                         C)
-                        <div class="code-block">volumes: - configMap: name: my-config</div>
+                        <div class="code-block">volumes: - secret: secretName: my-secret</div>
                     </div>
                     <div class="option" data-answer="D">
                         D)
-                        <div class="code-block">env: - configMapKeyRef: name: my-config</div>
+                        <div class="code-block">env: - secretKeyRef: name: my-secret</div>
                     </div>
                 </div>
                 <div class="feedback correct">
-                    <strong>🎉 정답입니다!</strong><br> 정답: B) envFrom과 configMapRef를 사용<br> envFrom을 사용하면 ConfigMap의 모든 키-값 쌍을 환경변수로 가져올 수 있습니다.
+                    <strong>🎉 정답입니다!</strong><br> 정답: B) envFrom과 secretRef를 사용<br> envFrom을 사용하면 Secret의 모든 키-값 쌍을 환경변수로 가져올 수 있습니다.
                 </div>
                 <div class="feedback incorrect">
-                    <strong>❌ 틀렸습니다.</strong><br> ConfigMap의 모든 키를 환경변수로 가져오려면 envFrom과 configMapRef를 사용해야 합니다.
+                    <strong>❌ 틀렸습니다.</strong><br> Secret의 모든 키를 환경변수로 가져오려면 envFrom과 secretRef를 사용해야 합니다.
                 </div>
                 <div class="hint">
-                    💡 힌트: 'From'이라는 단어가 들어간 필드명을 생각해보세요.
+                    💡 힌트: ConfigMap과 동일한 방식으로 'From'이라는 단어가 들어간 필드명을 사용합니다.
                 </div>
             </div>
 
-            <!-- 문제 7: 명령어 -->
-            <div class="question" data-question="7" data-type="command">
-                <div class="question-meta">문제 7/10 - 파일 기반 생성</div>
-                <h3>nginx.conf 파일로부터 ConfigMap을 생성하는 명령어를 작성하세요.</h3>
-                <p><strong>조건:</strong> ConfigMap 이름은 nginx-config입니다.</p>
-                <input type="text" class="answer-input" placeholder="kubectl create configmap ...">
-                <div class="feedback correct">
-                    <strong>🎉 정답입니다!</strong><br> 정답: kubectl create configmap nginx-config --from-file=nginx.conf<br> --from-file 옵션을 사용하여 파일 내용으로 ConfigMap을 생성할 수 있습니다.
-                </div>
-                <div class="feedback incorrect">
-                    <strong>❌ 틀렸습니다.</strong><br> --from-file 옵션을 사용해야 합니다.
-                </div>
-                <div class="hint">
-                    💡 힌트: --from-file 옵션을 사용하여 파일에서 ConfigMap을 생성하세요.
-                </div>
-            </div>
-
-            <!-- 문제 8: 객관식 -->
-            <div class="question" data-question="8" data-type="multiple">
-                <div class="question-meta">문제 8/10 - 볼륨 마운트</div>
-                <h3>ConfigMap을 볼륨으로 마운트할 때 subPath를 사용하는 이유는?</h3>
-                <div class="options">
-                    <div class="option" data-answer="A">A) ConfigMap의 전체 내용을 마운트하기 위해</div>
-                    <div class="option" data-answer="B">B) 특정 키의 값만 특정 파일 경로에 마운트하기 위해</div>
-                    <div class="option" data-answer="C">C) ConfigMap의 권한을 설정하기 위해</div>
-                    <div class="option" data-answer="D">D) ConfigMap을 암호화하기 위해</div>
-                </div>
-                <div class="feedback correct">
-                    <strong>🎉 정답입니다!</strong><br> 정답: B) 특정 키의 값만 특정 파일 경로에 마운트하기 위해<br> subPath를 사용하면 ConfigMap의 특정 키만 선택하여 원하는 파일명으로 마운트할 수 있습니다.
-                </div>
-                <div class="feedback incorrect">
-                    <strong>❌ 틀렸습니다.</strong><br> subPath는 ConfigMap의 특정 키만 선택적으로 마운트할 때 사용합니다.
-                </div>
-                <div class="hint">
-                    💡 힌트: 'sub'는 '부분적인'을 의미합니다. Path(경로)의 일부만 사용한다는 뜻입니다.
-                </div>
-            </div>
-
-            <!-- 문제 9: 명령어 -->
-            <div class="question" data-question="9" data-type="command">
-                <div class="question-meta">문제 9/10 - 수정 명령어</div>
-                <h3>ConfigMap에 새로운 키-값을 추가하는 patch 명령어를 작성하세요.</h3>
+            <!-- 문제 8: 명령어 -->
+            <div class="question" data-question="8" data-type="command">
+                <div class="question-meta">문제 8/10 - TLS Secret 생성</div>
+                <h3>TLS 인증서와 개인키로 TLS Secret을 생성하는 명령어를 작성하세요.</h3>
                 <p><strong>조건:</strong></p>
                 <ul style="margin: 15px 0; padding-left: 20px;">
-                    <li>ConfigMap 이름: app-config</li>
-                    <li>추가할 키-값: timeout=30</li>
+                    <li>Secret 이름: web-tls</li>
+                    <li>인증서 파일: server.crt</li>
+                    <li>개인키 파일: server.key</li>
                 </ul>
-                <input type="text" class="answer-input" placeholder="kubectl patch configmap ...">
+                <input type="text" class="answer-input" placeholder="kubectl create secret tls ...">
                 <div class="feedback correct">
-                    <strong>🎉 정답입니다!</strong><br> 정답: kubectl patch configmap app-config -p '{"data":{"timeout":"30"}}'<br> patch 명령어를 사용하여 기존 ConfigMap에 새로운 키-값을 추가할 수 있습니다.
+                    <strong>🎉 정답입니다!</strong><br> 정답: kubectl create secret tls web-tls --cert=server.crt --key=server.key<br> TLS Secret은 --cert와 --key 옵션으로 인증서와 개인키 파일을 지정합니다.
                 </div>
                 <div class="feedback incorrect">
-                    <strong>❌ 틀렸습니다.</strong><br> kubectl patch configmap [이름] -p '{"data":{"key":"value"}}' 형식을 사용해야 합니다.
+                    <strong>❌ 틀렸습니다.</strong><br> kubectl create secret tls 명령어와 --cert, --key 옵션을 사용해야 합니다.
                 </div>
                 <div class="hint">
-                    💡 힌트: patch 명령어에서 -p 옵션과 JSON 형식을 사용하세요. data 필드 안에 새로운 키-값을 추가합니다.
+                    💡 힌트: tls 타입과 --cert, --key 옵션을 사용하세요.
                 </div>
             </div>
 
-            <!-- 문제 10: 객관식 -->
-            <div class="question" data-question="10" data-type="multiple">
-                <div class="question-meta">문제 10/10 - 주의사항</div>
-                <h3>ConfigMap 사용 시 주의사항으로 올바른 것은?</h3>
+            <!-- 문제 9: 객관식 -->
+            <div class="question" data-question="9" data-type="multiple">
+                <div class="question-meta">문제 9/10 - 보안 고려사항</div>
+                <h3>Secret 사용 시 보안 모범 사례가 아닌 것은?</h3>
                 <div class="options">
-                    <div class="option" data-answer="A">A) ConfigMap 크기는 무제한이다</div>
-                    <div class="option" data-answer="B">B) 환경변수로 주입된 ConfigMap은 자동으로 업데이트된다</div>
-                    <div class="option" data-answer="C">C) ConfigMap은 1MB 이하로 제한되며, 환경변수 변경 시 Pod 재시작이 필요하다</div>
-                    <div class="option" data-answer="D">D) ConfigMap에 민감한 정보(비밀번호)를 저장해도 안전하다</div>
+                    <div class="option" data-answer="A">A) Secret은 필요한 Pod에만 접근 허용</div>
+                    <div class="option" data-answer="B">B) 정기적인 Secret 값 로테이션</div>
+                    <div class="option" data-answer="C">C) Secret 값을 애플리케이션 로그에 출력</div>
+                    <div class="option" data-answer="D">D) RBAC를 통한 Secret 접근 제어</div>
                 </div>
                 <div class="feedback correct">
-                    <strong>🎉 정답입니다!</strong><br> 정답: C) ConfigMap은 1MB 이하로 제한되며, 환경변수 변경 시 Pod 재시작이 필요하다<br> ConfigMap은 크기 제한이 있고, 환경변수는 Pod 시작 시에만 주입되므로 변경 시 재시작이 필요합니다. 볼륨 마운트는 자동 업데이트됩니다.
+                    <strong>🎉 정답입니다!</strong><br> 정답: C) Secret 값을 애플리케이션 로그에 출력<br> Secret 값은 절대 로그에 출력하면 안 됩니다. 로그는 보통 평문으로 저장되어 보안 위험이 있습니다.
                 </div>
                 <div class="feedback incorrect">
-                    <strong>❌ 틀렸습니다.</strong><br> ConfigMap은 1MB 제한이 있고, 환경변수 변경 시 Pod 재시작이 필요하며, 민감한 정보는 Secret을 사용해야 합니다.
+                    <strong>❌ 틀렸습니다.</strong><br> Secret 값을 로그에 출력하는 것은 보안상 매우 위험한 행위입니다.
                 </div>
                 <div class="hint">
-                    💡 힌트: ConfigMap의 크기 제한과 환경변수 업데이트 방식을 생각해보세요.
+                    💡 힌트: Secret의 목적인 '비밀 유지'와 반대되는 행위를 찾아보세요.
+                </div>
+            </div>
+
+            <!-- 문제 10: 명령어 -->
+            <div class="question" data-question="10" data-type="command">
+                <div class="question-meta">문제 10/10 - Secret 수정</div>
+                <h3>기존 Secret에 새로운 키-값을 추가하는 patch 명령어를 작성하세요.</h3>
+                <p><strong>조건:</strong></p>
+                <ul style="margin: 15px 0; padding-left: 20px;">
+                    <li>Secret 이름: app-secret</li>
+                    <li>추가할 키-값: email=admin@example.com</li>
+                </ul>
+                <input type="text" class="answer-input" placeholder="kubectl patch secret ...">
+                <div class="feedback correct">
+                    <strong>🎉 정답입니다!</strong><br> 정답: kubectl patch secret app-secret -p '{"stringData":{"email":"admin@example.com"}}'<br> stringData를 사용하면 평문 값이 자동으로 Base64 인코딩됩니다.
+                </div>
+                <div class="feedback incorrect">
+                    <strong>❌ 틀렸습니다.</strong><br> kubectl patch secret [이름] -p '{"stringData":{"key":"value"}}' 형식을 사용하세요.
+                </div>
+                <div class="hint">
+                    💡 힌트: patch 명령어에서 stringData를 사용하면 자동으로 Base64 인코딩됩니다.
                 </div>
             </div>
 
@@ -615,16 +624,16 @@
 
         // 정답 데이터
         const answers = {
-            1: 'C',
-            2: ['kubectl create configmap app-settings --from-literal=database_url=postgresql://db:5432/myapp --from-literal=log_level=debug'],
-            3: 'D',
-            4: ['kubectl get configmap my-config -o yaml', 'kubectl get cm my-config -o yaml'],
-            5: ['application.properties', 'app.properties', 'config.properties', 'server.properties'],
+            1: 'B',
+            2: ['kubectl create secret generic api-secret --from-literal=api_key=abc123 --from-literal=token=xyz789'],
+            3: 'B',
+            4: ['kubectl create secret docker-registry my-registry --docker-server=docker.io --docker-username=myuser --docker-password=mypass'],
+            5: ['kubectl get secret db-secret -o jsonpath=\'{.data.password}\' | base64 -d'],
             6: 'B',
-            7: ['kubectl create configmap nginx-config --from-file=nginx.conf'],
-            8: 'B',
-            9: ['kubectl patch configmap app-config -p \'{"data":{"timeout":"30"}}\'', 'kubectl patch configmap app-config -p "{\"data\":{\"timeout\":\"30\"}}"'],
-            10: 'C'
+            7: 'B',
+            8: ['kubectl create secret tls web-tls --cert=server.crt --key=server.key'],
+            9: 'C',
+            10: ['kubectl patch secret app-secret -p \'{"stringData":{"email":"admin@example.com"}}\'', 'kubectl patch secret app-secret -p "{\"stringData\":{\"email\":\"admin@example.com\"}}"']
         };
 
         function updateProgress() {
@@ -651,7 +660,7 @@
                 checkButton.disabled = true;
             } else {
                 checkButton.textContent = '정답 확인';
-                checkButton.style.background = 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)';
+                checkButton.style.background = 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)';
                 checkButton.disabled = false;
             }
 
@@ -762,7 +771,7 @@
 
                 // 객관식이라도 다시 시도할 수 있도록 수정
                 if (questionType === 'multiple') {
-                    // 1.5초 후 옵션 선택 초기화하고 다시 시도 가능하게
+                    // 1초 후 옵션 선택 초기화하고 다시 시도 가능하게
                     setTimeout(() => {
                         // 옵션들 다시 활성화
                         currentQuestionElement.querySelectorAll('.option').forEach(opt => {
@@ -771,7 +780,7 @@
                         });
                         feedback.classList.remove('show');
                         checkButton.textContent = '정답 확인';
-                        checkButton.style.background = 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)';
+                        checkButton.style.background = 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)';
                         answered[currentQuestion] = false;
                     }, 1500);
                 } else {
@@ -781,7 +790,7 @@
                         currentQuestionElement.querySelector('.answer-input').value = '';
                         feedback.classList.remove('show');
                         checkButton.textContent = '정답 확인';
-                        checkButton.style.background = 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)';
+                        checkButton.style.background = 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)';
                         answered[currentQuestion] = false;
                     }, 1500);
                 }
@@ -807,7 +816,7 @@
 
             if (score >= 8) {
                 medal.textContent = '🥇';
-                message.textContent = '훌륭합니다! ConfigMap을 완벽히 이해하셨네요!';
+                message.textContent = '훌륭합니다! Secret 관리를 완벽히 이해하셨네요!';
             } else if (score >= 6) {
                 medal.textContent = '🥈';
                 message.textContent = '잘했습니다! 조금 더 학습하면 완벽해질 거예요!';
@@ -858,7 +867,7 @@
             // 버튼 초기화
             const checkButton = document.querySelector('.check-button');
             checkButton.textContent = '정답 확인';
-            checkButton.style.background = 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)';
+            checkButton.style.background = 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)';
             checkButton.disabled = false;
 
             // 결과 화면 숨기기
