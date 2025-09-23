@@ -1,0 +1,151 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-exec-probes
+  labels:
+    app: complex-app
+spec:
+  containers:
+  - name: webapp
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    
+    # Startup Probe - 초기화 완료 파일 확인
+    startupProbe:
+      exec:
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # 초기화 완료 마커 파일 확인
+          test -f /tmp/app-ready &&
+          # nginx 설정 파일 유효성 검증
+          nginx -t
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 10
+      failureThreshold: 20
+    
+    # Readiness Probe - 복합 상태 확인
+    readinessProbe:
+      exec:
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # 1. nginx 프로세스 실행 확인
+          pgrep nginx > /dev/null &&
+          # 2. nginx 설정 유효성 확인
+          nginx -t &&
+          # 3. 디스크 용량 확인 (80% 미만)
+          [ $(df / | tail -1 | awk '{print $5}' | sed 's/%//') -lt 80 ] &&
+          # 4. 메모리 사용률 확인 (90% 미만)
+          [ $(free | grep Mem | awk '{printf("%.0f", $3/$2 * 100.0)}') -lt 90 ]
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 15
+      successThreshold: 1
+      failureThreshold: 3
+    
+    # Liveness Probe - 기본 프로세스 생존 확인
+    livenessProbe:
+      exec:
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # nginx 마스터 프로세스 확인
+          pgrep -f "nginx: master process" > /dev/null &&
+          # 기본 응답 가능 여부 확인
+          curl -f http://localhost/ > /dev/null 2>&1
+      initialDelaySeconds: 30
+      periodSeconds: 60
+      timeoutSeconds: 10
+      failureThreshold: 3
+    
+    # 초기화 스크립트 실행을 위한 InitContainer
+    lifecycle:
+      postStart:
+        exec:
+          command:
+          - /bin/sh
+          - -c
+          - |
+            # 초기화 작업 시뮬레이션
+            sleep 5
+            # 초기화 완료 마커 생성
+            touch /tmp/app-ready
+            echo "Application initialized at $(date)" > /tmp/init.log
+
+---
+# 복잡한 데이터베이스 시뮬레이션 Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: database-with-exec-probes
+  labels:
+    app: database-sim
+spec:
+  containers:
+  - name: postgres-sim
+    image: postgres:13
+    env:
+    - name: POSTGRES_DB
+      value: testdb
+    - name: POSTGRES_USER
+      value: testuser
+    - name: POSTGRES_PASSWORD
+      value: testpass
+    ports:
+    - containerPort: 5432
+    
+    # Startup Probe - PostgreSQL 초기화 완료 확인
+    startupProbe:
+      exec:
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # PostgreSQL이 연결을 수락하는지 확인
+          pg_isready -h localhost -p 5432 -U testuser &&
+          # 기본 데이터베이스 연결 테스트
+          psql -h localhost -U testuser -d testdb -c "SELECT 1;" > /dev/null 2>&1
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      timeoutSeconds: 15
+      failureThreshold: 30  # PostgreSQL 초기화 시간 고려
+    
+    # Readiness Probe - 데이터베이스 서비스 준비 상태
+    readinessProbe:
+      exec:
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # 1. PostgreSQL 서비스 상태 확인
+          pg_isready -h localhost -p 5432 -U testuser &&
+          # 2. 활성 연결 수 확인 (100개 미만)
+          [ $(psql -h localhost -U testuser -d testdb -t -c "SELECT count(*) FROM pg_stat_activity;" 2>/dev/null | xargs) -lt 100 ] &&
+          # 3. 디스크 공간 확인
+          [ $(df /var/lib/postgresql/data | tail -1 | awk '{print $5}' | sed 's/%//') -lt 85 ]
+      initialDelaySeconds: 30
+      periodSeconds: 20
+      timeoutSeconds: 20
+      failureThreshold: 3
+    
+    # Liveness Probe - 기본 생존 확인
+    livenessProbe:
+      exec:
+        command:
+        - pg_isready
+        - -h
+        - localhost
+        - -p
+        - "5432"
+        - -U
+        - testuser
+      initialDelaySeconds: 60
+      periodSeconds: 60
+      timeoutSeconds: 10
+      failureThreshold: 3

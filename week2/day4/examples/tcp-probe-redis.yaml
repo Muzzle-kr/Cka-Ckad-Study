@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis-with-tcp-probe
+  labels:
+    app: redis-demo
+spec:
+  containers:
+  - name: redis
+    image: redis:6-alpine
+    ports:
+    - containerPort: 6379
+    command: ["redis-server"]
+    args: ["--appendonly", "yes", "--save", "60", "1"]
+    
+    # Startup Probe - Redis 시작 확인 (TCP 연결)
+    startupProbe:
+      tcpSocket:
+        port: 6379
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 20  # Redis 시작 대기 (최대 1분 40초)
+    
+    # Readiness Probe - Redis 서비스 준비 확인
+    readinessProbe:
+      tcpSocket:
+        port: 6379
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 3
+    
+    # Liveness Probe - Redis 생존 확인
+    livenessProbe:
+      tcpSocket:
+        port: 6379
+      initialDelaySeconds: 30
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+spec:
+  selector:
+    app: redis-demo
+  ports:
+  - port: 6379
+    targetPort: 6379
+  type: ClusterIP
+
+---
+# Redis 클라이언트 테스트 Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis-client
+  labels:
+    app: redis-client
+spec:
+  containers:
+  - name: redis-client
+    image: redis:6-alpine
+    command: ["sleep", "3600"]
+    
+    # Redis 클라이언트도 TCP Probe로 Redis 서버 연결 확인
+    readinessProbe:
+      tcpSocket:
+        port: 6379
+        host: redis-service  # 서비스 이름으로 연결 테스트
+      initialDelaySeconds: 10
+      periodSeconds: 15
+      timeoutSeconds: 5
+      failureThreshold: 3

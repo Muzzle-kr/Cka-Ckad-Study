@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 4: Kubernetes Probe 설정 퀴즈</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .progress-container {
+            background: rgba(255,255,255,0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .quiz-container {
+            padding: 40px;
+        }
+
+        .question-card {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .question-number {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            font-size: 1.1em;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .option.correct {
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .option.incorrect {
+            border-color: #f44336;
+            background: linear-gradient(135deg, #f44336, #da190b);
+            color: white;
+        }
+
+        .option-label {
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .code-input {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .feedback.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feedback.correct {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .feedback.incorrect {
+            background: linear-gradient(135deg, #f8d7da, #f1b0b7);
+            color: #721c24;
+            border: 1px solid #f1b0b7;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #eee;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #545b62;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .hint-btn {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            color: white;
+            font-size: 0.9em;
+            padding: 8px 20px;
+            margin-left: 10px;
+        }
+
+        .hint-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .hint {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        .results {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #f8f9ff, #e8eafe);
+            border-radius: 20px;
+            margin-top: 30px;
+        }
+
+        .score {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .score-message {
+            font-size: 1.3em;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .achievement {
+            font-size: 4em;
+            margin-bottom: 20px;
+            text-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .quiz-container {
+                padding: 20px;
+            }
+
+            .question-card {
+                padding: 20px;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .question-card.hidden {
+            display: none;
+        }
+
+        .question-card.active {
+            display: block;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><span>⚙️</span>Day 4: Kubernetes Probe 설정 퀴즈</h1>
+            <p>총 10문제 | CKA/CKAD 준비</p>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="progress-text" id="progressText">0/10</div>
+        </div>
+
+        <div class="quiz-container" id="quizContainer">
+            <!-- 문제 1: Probe 개념 -->
+            <div class="question-card active" data-question="0">
+                <div class="question-number">문제 1</div>
+                <div class="question-text">Liveness Probe가 실패했을 때 Kubernetes가 취하는 기본 동작은 무엇인가요?</div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A</span>
+                        Pod를 서비스 엔드포인트에서 제거한다
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B</span>
+                        컨테이너를 재시작한다
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C</span>
+                        Pod를 삭제한다
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D</span>
+                        노드를 재시작한다
+                    </div>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 문제 2: Readiness vs Liveness -->
+            <div class="question-card hidden" data-question="1">
+                <div class="question-number">문제 2</div>
+                <div class="question-text">Readiness Probe의 주요 목적은 무엇인가요?</div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A</span>
+                        컨테이너가 살아있는지 확인한다
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B</span>
+                        컨테이너가 트래픽을 받을 준비가 되었는지 확인한다
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C</span>
+                        컨테이너가 정상 종료되었는지 확인한다
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D</span>
+                        노드의 상태를 확인한다
+                    </div>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 문제 3: HTTP Probe 설정 -->
+            <div class="question-card hidden" data-question="2">
+                <div class="question-number">문제 3</div>
+                <div class="question-text">HTTP GET Probe에서 health check 엔드포인트를 "/health"로, 포트를 8080으로 설정하는 YAML 구문을 작성하세요.</div>
+                <input type="text" class="answer-input code-input" placeholder="httpGet: 부분부터 작성하세요">
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 문제 4: Startup Probe 특징 -->
+            <div class="question-card hidden" data-question="3">
+                <div class="question-number">문제 4</div>
+                <div class="question-text">Startup Probe에 대한 설명 중 올바른 것은?</div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A</span>
+                        성공하면 다른 Probe들이 활성화된다
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B</span>
+                        실패하면 Pod를 삭제한다
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C</span>
+                        시작이 완료된 후에도 계속 실행된다
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D</span>
+                        노드 레벨에서 실행된다
+                    </div>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 문제 5: Probe 타입 -->
+            <div class="question-card hidden" data-question="4">
+                <div class="question-number">문제 5</div>
+                <div class="question-text">TCP 포트 연결 상태만 확인하고 싶을 때 사용하는 Probe 타입은?</div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A</span>
+                        httpGet
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B</span>
+                        tcpSocket
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C</span>
+                        exec
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D</span>
+                        grpc
+                    </div>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 문제 6: Probe 매개변수 -->
+            <div class="question-card hidden" data-question="5">
+                <div class="question-number">문제 6</div>
+                <div class="question-text">initialDelaySeconds의 기본값은 얼마인가요?</div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A</span>
+                        1초
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B</span>
+                        5초
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C</span>
+                        10초
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D</span>
+                        0초
+                    </div>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 문제 7: 실습 명령어 -->
+            <div class="question-card hidden" data-question="6">
+                <div class="question-number">문제 7</div>
+                <div class="question-text">Pod의 Probe 설정을 YAML 형식으로 확인하는 kubectl 명령어를 작성하세요.</div>
+                <input type="text" class="answer-input code-input" placeholder="kubectl get pod...">
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 문제 8: 트러블슈팅 -->
+            <div class="question-card hidden" data-question="7">
+                <div class="question-number">문제 8</div>
+                <div class="question-text">Probe 관련 이벤트만 필터링해서 확인하는 명령어는?</div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A</span>
+                        kubectl get events --field-selector reason=Unhealthy
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B</span>
+                        kubectl describe events --selector probe=failed
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C</span>
+                        kubectl logs --probe-events
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D</span>
+                        kubectl get pods --show-probes
+                    </div>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 문제 9: Exec Command Probe -->
+            <div class="question-card hidden" data-question="8">
+                <div class="question-number">문제 9</div>
+                <div class="question-text">/tmp/healthy 파일 존재 여부를 확인하는 Exec Command Probe를 작성하세요.</div>
+                <input type="text" class="answer-input code-input" placeholder="exec: 부분부터 작성하세요">
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 문제 10: 실전 시나리오 -->
+            <div class="question-card hidden" data-question="9">
+                <div class="question-number">문제 10</div>
+                <div class="question-text">데이터베이스 애플리케이션처럼 시작 시간이 오래 걸리는 경우, 어떤 Probe를 먼저 설정해야 하나요?</div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A</span>
+                        Liveness Probe만 설정
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B</span>
+                        Readiness Probe만 설정
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C</span>
+                        Startup Probe를 먼저 설정
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D</span>
+                        모든 Probe를 동시에 설정
+                    </div>
+                </div>
+                <div class="feedback"></div>
+            </div>
+
+            <!-- 결과 화면 -->
+            <div class="results hidden" id="results">
+                <div class="achievement" id="achievement">🎉</div>
+                <div class="score" id="finalScore">0/10</div>
+                <div class="score-message" id="scoreMessage">훌륭합니다!</div>
+                <div style="margin-top: 30px;">
+                    <button class="btn btn-primary" onclick="restartQuiz()">다시 도전하기</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" id="prevBtn" onclick="previousQuestion()" disabled>이전</button>
+            <div>
+                <button class="btn btn-primary" id="checkBtn" onclick="checkAnswer()">정답 확인</button>
+                <button class="btn hint-btn" id="hintBtn" onclick="showHint()">💡 힌트</button>
+            </div>
+            <button class="btn btn-secondary" id="nextBtn" onclick="nextQuestion()" disabled>다음</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                type: 'multiple',
+                correct: 'B',
+                explanation: 'Liveness Probe가 실패하면 Kubernetes는 컨테이너를 재시작합니다. 이는 컨테이너가 응답하지 않는 상태(데드락, 무한루프 등)를 해결하기 위함입니다.',
+                hint: 'Liveness는 "살아있음"을 확인하고, 문제가 있으면 다시 시작합니다.'
+            },
+            {
+                type: 'multiple',
+                correct: 'B',
+                explanation: 'Readiness Probe는 컨테이너가 트래픽을 받을 준비가 되었는지 확인합니다. 실패 시 서비스 엔드포인트에서 제거되어 트래픽을 받지 않습니다.',
+                hint: 'Ready는 "준비됨"을 의미합니다. 트래픽을 받을 준비를 확인합니다.'
+            },
+            {
+                type: 'text',
+                correct: ['httpget:', 'httpget', 'httpGet:', 'httpGet'],
+                checkAnswer: function(answer) {
+                    const normalized = answer.toLowerCase().replace(/\s/g, '');
+                    return normalized.includes('httpget') && normalized.includes('path') && normalized.includes('/health') && normalized.includes('port') && normalized.includes('8080');
+                },
+                explanation: '정답: httpGet:\n  path: /health\n  port: 8080\n\nHTTP GET Probe는 httpGet 필드 하위에 path와 port를 설정합니다.',
+                hint: 'httpGet 하위에 path: /health와 port: 8080을 설정해야 합니다.'
+            },
+            {
+                type: 'multiple',
+                correct: 'A',
+                explanation: 'Startup Probe가 성공하면 다른 Probe들(Liveness, Readiness)이 활성화됩니다. 시작이 오래 걸리는 애플리케이션에서 다른 Probe들이 너무 일찍 실패하는 것을 방지합니다.',
+                hint: 'Startup이 성공해야 다른 Probe들이 시작됩니다.'
+            },
+            {
+                type: 'multiple',
+                correct: 'B',
+                explanation: 'tcpSocket은 지정된 포트에 TCP 연결이 가능한지만 확인합니다. HTTP 응답이나 명령어 실행 없이 단순히 네트워크 연결만 테스트합니다.',
+                hint: 'TCP 연결 상태만 확인하는 간단한 방법을 생각해보세요.'
+            },
+            {
+                type: 'multiple',
+                correct: 'D',
+                explanation: 'initialDelaySeconds의 기본값은 0초입니다. 즉, 컨테이너가 시작되자마자 Probe가 실행됩니다.',
+                hint: '기본적으로는 지연 없이 바로 시작됩니다.'
+            },
+            {
+                type: 'text',
+                correct: ['kubectl get pod', 'kubectl get pods'],
+                checkAnswer: function(answer) {
+                    const normalized = answer.toLowerCase().replace(/\s+/g, ' ').trim();
+                    return normalized.includes('kubectl get pod') && normalized.includes('-o yaml') && (normalized.includes('grep') || normalized.includes('probe'));
+                },
+                explanation: '정답: kubectl get pod <pod-name> -o yaml | grep -A 10 -B 2 probe\n\nPod의 전체 YAML을 출력하고 grep으로 probe 관련 부분을 필터링합니다.',
+                hint: 'kubectl get pod -o yaml과 grep을 조합해서 probe 부분만 확인하세요.'
+            },
+            {
+                type: 'multiple',
+                correct: 'A',
+                explanation: 'kubectl get events --field-selector reason=Unhealthy 명령어로 Probe 실패 관련 이벤트만 필터링할 수 있습니다.',
+                hint: 'field-selector를 사용해서 reason=Unhealthy인 이벤트를 찾아보세요.'
+            },
+            {
+                type: 'text',
+                correct: ['exec:', 'exec'],
+                checkAnswer: function(answer) {
+                    const normalized = answer.toLowerCase().replace(/\s/g, '');
+                    return normalized.includes('exec') && normalized.includes('command') && normalized.includes('cat') && normalized.includes('/tmp/healthy');
+                },
+                explanation: '정답: exec:\n  command:\n  - cat\n  - /tmp/healthy\n\nExec Command Probe는 컨테이너 내에서 명령어를 실행하고 종료 코드로 성공/실패를 판단합니다.',
+                hint: 'exec 하위의 command에 cat /tmp/healthy 명령어를 리스트 형태로 작성하세요.'
+            },
+            {
+                type: 'multiple',
+                correct: 'C',
+                explanation: 'Startup Probe를 먼저 설정해야 합니다. 시작 시간이 오래 걸리는 애플리케이션에서는 Startup Probe가 성공한 후에 다른 Probe들이 활성화되도록 해야 합니다.',
+                hint: '시작이 오래 걸리면 어떤 Probe로 충분한 시간을 확보해야 할까요?'
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = Array(questions.length).fill(false);
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `${currentQuestion + 1}/${questions.length}`;
+        }
+
+        function showQuestion(index) {
+            document.querySelectorAll('.question-card').forEach((card, i) => {
+                if (i === index) {
+                    card.classList.remove('hidden');
+                    card.classList.add('active');
+                } else {
+                    card.classList.add('hidden');
+                    card.classList.remove('active');
+                }
+            });
+
+            updateProgress();
+            updateButtons();
+        }
+
+        function updateButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const checkBtn = document.getElementById('checkBtn');
+
+            prevBtn.disabled = currentQuestion === 0;
+            nextBtn.disabled = currentQuestion === questions.length - 1;
+            
+            if (answered[currentQuestion]) {
+                checkBtn.textContent = '정답입니다!';
+                checkBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+                nextBtn.disabled = false;
+            } else {
+                checkBtn.textContent = '정답 확인';
+                checkBtn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+            }
+        }
+
+        function checkAnswer() {
+            if (answered[currentQuestion]) return;
+
+            const currentQuestionElement = document.querySelector(`[data-question="${currentQuestion}"]`);
+            const questionData = questions[currentQuestion];
+            const feedback = currentQuestionElement.querySelector('.feedback');
+            let isCorrect = false;
+
+            if (questionData.type === 'multiple') {
+                const selected = currentQuestionElement.querySelector('.option.selected');
+                if (!selected) return;
+
+                const selectedValue = selected.getAttribute('data-value');
+                isCorrect = selectedValue === questionData.correct;
+
+                currentQuestionElement.querySelectorAll('.option').forEach(option => {
+                    const value = option.getAttribute('data-value');
+                    option.style.pointerEvents = 'none';
+                    if (value === questionData.correct) {
+                        option.classList.add('correct');
+                    } else if (option.classList.contains('selected') && value !== questionData.correct) {
+                        option.classList.add('incorrect');
+                    }
+                });
+            } else {
+                const input = currentQuestionElement.querySelector('.answer-input');
+                const userAnswer = input.value.trim();
+                
+                if (questionData.checkAnswer) {
+                    isCorrect = questionData.checkAnswer(userAnswer);
+                } else {
+                    isCorrect = questionData.correct.some(correct => 
+                        userAnswer.toLowerCase().includes(correct.toLowerCase())
+                    );
+                }
+
+                input.disabled = true;
+            }
+
+            if (isCorrect) {
+                score++;
+                feedback.className = 'feedback correct show';
+                feedback.innerHTML = `<strong>🎉 정답입니다!</strong><br>${questionData.explanation}`;
+                answered[currentQuestion] = true;
+                updateButtons();
+            } else {
+                feedback.className = 'feedback incorrect show';
+                feedback.innerHTML = `<strong>❌ 틀렸습니다.</strong><br>다시 시도해보세요!`;
+                
+                setTimeout(() => {
+                    if (questionData.type === 'multiple') {
+                        currentQuestionElement.querySelectorAll('.option').forEach(option => {
+                            option.classList.remove('selected', 'correct', 'incorrect');
+                            option.style.pointerEvents = 'auto';
+                        });
+                    } else {
+                        currentQuestionElement.querySelector('.answer-input').disabled = false;
+                        currentQuestionElement.querySelector('.answer-input').value = '';
+                    }
+                    feedback.classList.remove('show');
+                    answered[currentQuestion] = false;
+                }, 1500);
+            }
+
+            if (currentQuestion === questions.length - 1 && answered[currentQuestion]) {
+                setTimeout(() => {
+                    showResults();
+                }, 2000);
+            }
+        }
+
+        function showHint() {
+            const currentQuestionElement = document.querySelector(`[data-question="${currentQuestion}"]`);
+            const questionData = questions[currentQuestion];
+            
+            let existingHint = currentQuestionElement.querySelector('.hint');
+            if (existingHint) {
+                existingHint.remove();
+                return;
+            }
+
+            const hint = document.createElement('div');
+            hint.className = 'hint';
+            hint.innerHTML = `<strong>💡 힌트:</strong> ${questionData.hint}`;
+            currentQuestionElement.appendChild(hint);
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion(currentQuestion);
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion(currentQuestion);
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quizContainer').style.display = 'none';
+            document.querySelector('.controls').style.display = 'none';
+            
+            const results = document.getElementById('results');
+            const finalScore = document.getElementById('finalScore');
+            const scoreMessage = document.getElementById('scoreMessage');
+            const achievement = document.getElementById('achievement');
+
+            finalScore.textContent = `${score}/${questions.length}`;
+
+            if (score >= 9) {
+                achievement.textContent = '🥇';
+                scoreMessage.textContent = '완벽합니다! 당신은 Kubernetes Probe 전문가입니다!';
+            } else if (score >= 7) {
+                achievement.textContent = '🥈';
+                scoreMessage.textContent = '훌륭합니다! Probe 설정을 잘 이해하고 있습니다!';
+            } else if (score >= 5) {
+                achievement.textContent = '🥉';
+                scoreMessage.textContent = '좋습니다! 조금 더 학습하면 완벽해집니다!';
+            } else {
+                achievement.textContent = '📚';
+                scoreMessage.textContent = '다시 학습한 후 재도전해보세요!';
+            }
+
+            results.classList.remove('hidden');
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            answered = Array(questions.length).fill(false);
+            
+            document.getElementById('quizContainer').style.display = 'block';
+            document.querySelector('.controls').style.display = 'flex';
+            document.getElementById('results').classList.add('hidden');
+
+            document.querySelectorAll('.question-card').forEach(card => {
+                const feedback = card.querySelector('.feedback');
+                feedback.classList.remove('show');
+                
+                card.querySelectorAll('.option').forEach(option => {
+                    option.classList.remove('selected', 'correct', 'incorrect');
+                    option.style.pointerEvents = 'auto';
+                });
+
+                const input = card.querySelector('.answer-input');
+                if (input) {
+                    input.value = '';
+                    input.disabled = false;
+                }
+
+                const hint = card.querySelector('.hint');
+                if (hint) hint.remove();
+            });
+
+            showQuestion(0);
+        }
+
+        // 옵션 클릭 이벤트
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.option')) {
+                const option = e.target.closest('.option');
+                const questionCard = option.closest('.question-card');
+                
+                if (answered[currentQuestion]) return;
+
+                questionCard.querySelectorAll('.option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                option.classList.add('selected');
+            }
+        });
+
+        // Enter 키로 정답 확인
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !answered[currentQuestion]) {
+                checkAnswer();
+            }
+        });
+
+        // 초기화
+        showQuestion(0);
+    </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-liveness
+  labels:
+    app: webapp-liveness
+spec:
+  containers:
+  - name: webapp
+    image: nginx:alpine
+    ports:
+    - containerPort: 80
+    # Liveness Probe: HTTP GET 방식
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    # 헬스체크용 파일 생성
+    command:
+    - /bin/sh
+    - -c
+    - |
+      echo "<!DOCTYPE html><html><body><h1>Healthy App</h1></body></html>" > /usr/share/nginx/html/index.html
+      touch /tmp/healthy
+      nginx -g 'daemon off;'

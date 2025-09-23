@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-readiness
+  labels:
+    app: webapp-readiness
+spec:
+  containers:
+  - name: webapp
+    image: nginx:alpine
+    ports:
+    - containerPort: 80
+    # Readiness Probe: HTTP GET 방식
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 3
+    # Liveness Probe도 함께 설정
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    # 초기 상태는 Ready
+    command:
+    - /bin/sh
+    - -c
+    - |
+      echo "<!DOCTYPE html><html><body><h1>App is Ready</h1></body></html>" > /usr/share/nginx/html/ready
+      echo "<!DOCTYPE html><html><body><h1>Healthy App</h1></body></html>" > /usr/share/nginx/html/index.html
+      nginx -g 'daemon off;'

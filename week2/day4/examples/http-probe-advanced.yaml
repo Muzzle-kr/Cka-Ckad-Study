@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-advanced-probes
+  labels:
+    app: webapp-advanced
+spec:
+  containers:
+  - name: api-server
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    env:
+    - name: APP_HEALTH_CHECK
+      value: "enabled"
+    
+    # Startup Probe - 사용자 정의 헤더와 함께
+    startupProbe:
+      httpGet:
+        path: /
+        port: 80
+        httpHeaders:
+        - name: X-Health-Check
+          value: "startup"
+        - name: User-Agent
+          value: "k8s-startup-probe"
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 30  # 최대 2.5분 대기
+    
+    # Readiness Probe - 실무용 헬스체크 엔드포인트
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 80
+        httpHeaders:
+        - name: X-Health-Check
+          value: "readiness"
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      successThreshold: 1
+      failureThreshold: 3
+    
+    # Liveness Probe - 간단한 생존 확인
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+        httpHeaders:
+        - name: X-Health-Check
+          value: "liveness"
+      initialDelaySeconds: 30
+      periodSeconds: 30    # 자주 확인할 필요 없음
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-advanced-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webapp-advanced
+  template:
+    metadata:
+      labels:
+        app: webapp-advanced
+    spec:
+      containers:
+      - name: api-server
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        
+        startupProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 30
+        
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          failureThreshold: 3

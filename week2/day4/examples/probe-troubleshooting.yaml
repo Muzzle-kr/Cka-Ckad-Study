@@ -1,0 +1,159 @@
+# 의도적으로 문제가 있는 Probe 설정들 (실습용)
+
+# 1. 잘못된 HTTP 경로로 인한 Startup Probe 실패
+apiVersion: v1
+kind: Pod
+metadata:
+  name: broken-http-probe
+  labels:
+    app: broken-demo
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    
+    # 문제: 존재하지 않는 경로
+    startupProbe:
+      httpGet:
+        path: /nonexistent-path  # 이 경로는 404 에러
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      failureThreshold: 3  # 너무 빨리 실패
+    
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 10
+
+---
+# 2. 잘못된 포트로 인한 TCP Probe 실패
+apiVersion: v1
+kind: Pod
+metadata:
+  name: broken-tcp-probe
+  labels:
+    app: broken-tcp
+spec:
+  containers:
+  - name: redis
+    image: redis:6-alpine
+    ports:
+    - containerPort: 6379
+    
+    # 문제: 잘못된 포트 번호
+    readinessProbe:
+      tcpSocket:
+        port: 9999  # Redis는 6379 포트를 사용
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 1   # 너무 짧은 타임아웃
+      failureThreshold: 2 # 너무 민감한 설정
+
+---
+# 3. 실패하는 명령어로 인한 Exec Probe 실패
+apiVersion: v1
+kind: Pod
+metadata:
+  name: broken-exec-probe
+  labels:
+    app: broken-exec
+spec:
+  containers:
+  - name: busybox
+    image: busybox:1.35
+    command: ["sleep", "3600"]
+    
+    # 문제: 존재하지 않는 파일을 확인
+    livenessProbe:
+      exec:
+        command:
+        - test
+        - -f
+        - /tmp/file-that-does-not-exist  # 존재하지 않는 파일
+      initialDelaySeconds: 10
+      periodSeconds: 30
+      failureThreshold: 1  # 한 번만 실패해도 재시작
+
+---
+# 4. 과도하게 엄격한 Probe 설정
+apiVersion: v1
+kind: Pod
+metadata:
+  name: overly-strict-probes
+  labels:
+    app: strict-demo
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    
+    # 문제: 초기 지연시간 없음
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 0  # nginx 시작 전에 확인
+      periodSeconds: 5
+      timeoutSeconds: 1       # 너무 짧은 타임아웃
+      failureThreshold: 1     # 한 번만 실패해도 준비안됨
+    
+    # 문제: 너무 공격적인 Liveness Probe
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 5        # 너무 자주 확인
+      timeoutSeconds: 1       # 너무 짧은 타임아웃
+      failureThreshold: 1     # 한 번만 실패해도 재시작
+
+---
+# 5. 올바른 설정 (비교용)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: correct-probe-settings
+  labels:
+    app: correct-demo
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    
+    # 올바른 설정
+    startupProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      successThreshold: 1
+      failureThreshold: 30    # 충분한 시작 시간
+    
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5       # 적절한 타임아웃
+      failureThreshold: 3     # 적절한 재시도 횟수
+    
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 30
+      periodSeconds: 30       # 부하를 주지 않는 주기
+      timeoutSeconds: 5
+      failureThreshold: 3     # 여유있는 설정
