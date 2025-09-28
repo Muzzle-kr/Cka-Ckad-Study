@@ -1,0 +1,212 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  namespace: ecommerce
+  labels:
+    app: mongodb
+    tier: database
+    component: database
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate  # 데이터베이스는 RollingUpdate 대신 Recreate 사용
+  selector:
+    matchLabels:
+      app: mongodb
+      tier: database
+  template:
+    metadata:
+      labels:
+        app: mongodb
+        tier: database
+        component: database
+    spec:
+      serviceAccountName: database-sa
+      containers:
+      - name: mongodb
+        image: mongo:5.0
+        ports:
+        - containerPort: 27017
+          name: mongo
+        env:
+        - name: MONGO_INITDB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: db-config
+              key: MONGO_INITDB_DATABASE
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: MONGO_ROOT_USERNAME
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: MONGO_ROOT_PASSWORD
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - mongo
+            - --eval
+            - "db.adminCommand('ping')"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - mongo
+            - --eval
+            - "db.runCommand('ping').ok"
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+        - name: mongodb-config
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
+      volumes:
+      - name: mongodb-data
+        emptyDir: {}  # 실제 환경에서는 PersistentVolume 사용
+      - name: mongodb-config
+        configMap:
+          name: db-config
+      nodeSelector:
+        disktype: ssd  # SSD 노드에 배치 (레이블이 있는 경우)
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: ecommerce
+  labels:
+    app: redis
+    tier: cache
+    component: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+      tier: cache
+  template:
+    metadata:
+      labels:
+        app: redis
+        tier: cache
+        component: database
+    spec:
+      serviceAccountName: database-sa
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: REDIS_PASSWORD
+        command:
+        - redis-server
+        - --requirepass
+        - $(REDIS_PASSWORD)
+        - --maxmemory
+        - "256mb"
+        - --maxmemory-policy
+        - "allkeys-lru"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -a
+            - $(REDIS_PASSWORD)
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - -a
+            - $(REDIS_PASSWORD)
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        emptyDir: {}  # 실제 환경에서는 PersistentVolume 사용
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+  namespace: ecommerce
+  labels:
+    app: mongodb
+    tier: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 27017
+    targetPort: 27017
+    protocol: TCP
+    name: mongo
+  selector:
+    app: mongodb
+    tier: database
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: ecommerce
+  labels:
+    app: redis
+    tier: cache
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  selector:
+    app: redis
+    tier: cache

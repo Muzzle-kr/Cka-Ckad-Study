@@ -1,0 +1,235 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-payment-service
+  namespace: ecommerce
+  labels:
+    app: secure-payment
+    tier: backend
+    security: maximum
+    compliance: pci-dss
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0  # 무중단 배포 필수
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: secure-payment
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: secure-payment
+        tier: backend
+        security: maximum
+        compliance: pci-dss
+    spec:
+      serviceAccountName: payment-service-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      # 전용 노드 배치
+      tolerations:
+      - key: "payment"
+        operator: "Equal" 
+        value: "true"
+        effect: "NoSchedule"
+      - key: "security"
+        operator: "Equal"
+        value: "high"
+        effect: "NoSchedule"
+      nodeSelector:
+        workload: payment
+        security: high
+      affinity:
+        # 필수: 다른 노드에 분산 배치
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - secure-payment
+            topologyKey: kubernetes.io/hostname
+        # 선호: 높은 성능 노드에 배치
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: instance-type
+                operator: In
+                values:
+                - high-memory
+                - compute-optimized
+      containers:
+      - name: payment-processor
+        image: node:18-alpine
+        ports:
+        - containerPort: 8083
+          name: https
+          protocol: TCP
+        command: ["node"]
+        args: ["-e", "const https=require('https');const fs=require('fs');const options={key:fs.readFileSync('/etc/tls/tls.key'),cert:fs.readFileSync('/etc/tls/tls.crt')};https.createServer(options,(req,res)=>{res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({service:'secure-payment',status:'healthy',security:'maximum',compliance:'pci-dss',timestamp:new Date().toISOString()}))}).listen(8083,()=>console.log('Secure payment service running on HTTPS port 8083'))"]
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: NODE_TLS_REJECT_UNAUTHORIZED
+          value: "1"
+        - name: STRIPE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: payment-gateway-secret
+              key: STRIPE_SECRET_KEY
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: JWT_SECRET
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1000m"
+          limits:
+            memory: "1Gi"    # Guaranteed QoS
+            cpu: "1000m"     # Guaranteed QoS
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 10001
+          capabilities:
+            drop:
+            - ALL
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8083
+            scheme: HTTPS
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8083
+            scheme: HTTPS
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /startup
+            port: 8083
+            scheme: HTTPS
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 15
+        volumeMounts:
+        - name: tls-certs
+          mountPath: /etc/tls
+          readOnly: true
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: cache-volume
+          mountPath: /app/cache
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: tls-certificates
+          defaultMode: 0400
+      - name: tmp-volume
+        emptyDir:
+          sizeLimit: 100Mi
+      - name: cache-volume
+        emptyDir:
+          sizeLimit: 500Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: secure-payment-service
+  namespace: ecommerce
+  labels:
+    app: secure-payment
+    tier: backend
+    security: maximum
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8083
+    targetPort: 8083
+    protocol: TCP
+    name: https
+  selector:
+    app: secure-payment
+    tier: backend
+
+---
+# Network Policy for Payment Service isolation
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payment-isolation
+  namespace: ecommerce
+  labels:
+    app: secure-payment
+    component: security
+spec:
+  podSelector:
+    matchLabels:
+      app: secure-payment
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # API Gateway에서만 접근 허용
+  - from:
+    - podSelector:
+        matchLabels:
+          app: api-gateway
+    ports:
+    - protocol: TCP
+      port: 8083
+  # 모니터링 시스템에서 헬스체크 허용
+  - from:
+    - podSelector:
+        matchLabels:
+          app: monitoring
+    ports:
+    - protocol: TCP
+      port: 8083
+  egress:
+  # DNS 조회 허용
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+  # 외부 결제 게이트웨이 API 호출 허용 (HTTPS)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+  # 데이터베이스 접근 허용
+  - to:
+    - podSelector:
+        matchLabels:
+          app: mongodb
+    ports:
+    - protocol: TCP
+      port: 27017

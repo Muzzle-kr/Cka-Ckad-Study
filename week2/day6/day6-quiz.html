@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 6: 실전 통합 연습 - Advanced Pod Configuration 퀴즈</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: white;
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .quiz-container {
+            padding: 40px;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-left: 5px solid #6a11cb;
+            display: none;
+        }
+
+        .question-card.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .question-number {
+            background: #6a11cb;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .question-type {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .question-difficulty {
+            background: #fff3e0;
+            color: #e65100;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #2c3e50;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .option:hover {
+            border-color: #6a11cb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 17, 203, 0.15);
+        }
+
+        .option.selected {
+            border-color: #6a11cb;
+            background: #f3e5f5;
+        }
+
+        .option.correct {
+            border-color: #4caf50;
+            background: #e8f5e8;
+        }
+
+        .option.incorrect {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .option-label {
+            font-weight: bold;
+            color: #6a11cb;
+            margin-right: 10px;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+        }
+
+        .answer-input:focus {
+            border-color: #6a11cb;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
+        }
+
+        .code-block {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feedback.correct {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+        }
+
+        .feedback.incorrect {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #c62828;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #6a11cb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a0bb5;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hint-btn {
+            background: #ff9800;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+
+        .hint {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            color: #e65100;
+            display: none;
+        }
+
+        .hint.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; height: 0; }
+            to { opacity: 1; height: auto; }
+        }
+
+        .final-score {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .final-score.show {
+            display: block;
+        }
+
+        .score-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .score-excellent { background: #4caf50; }
+        .score-good { background: #2196F3; }
+        .score-fair { background: #ff9800; }
+        .score-poor { background: #f44336; }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .show-all-btn {
+            background: #17a2b8;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .answers-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 30px;
+            width: 95%;
+            max-width: 800px;
+            border-radius: 15px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .scenario-box {
+            background: #e8f4fd;
+            border: 1px solid #2196F3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .quiz-container {
+                padding: 20px;
+            }
+            
+            .question-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ Day 6: 실전 통합 연습 퀴즈</h1>
+            <p>Advanced Pod Configuration & Microservices</p>
+            <p>총 15문제 | CKA/CKAD 통합 준비</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+            <div class="progress-text" id="progressText">0/15</div>
+        </div>
+
+        <div class="quiz-container">
+            <!-- 문제 1 -->
+            <div class="question-card active" id="question0">
+                <div class="question-header">
+                    <span class="question-number">문제 1</span>
+                    <div>
+                        <span class="question-type">객관식</span>
+                        <span class="question-difficulty">기초</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    마이크로서비스 아키텍처에서 ConfigMap을 사용하는 주된 이유는?
+                </div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A.</span>
+                        애플리케이션 코드와 설정을 분리하여 환경별 배포를 용이하게 하기 위해
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B.</span>
+                        데이터베이스 비밀번호와 같은 민감한 정보를 안전하게 저장하기 위해
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C.</span>
+                        Pod의 CPU와 메모리 사용량을 제한하기 위해
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D.</span>
+                        Pod 간의 네트워크 통신을 제어하기 위해
+                    </div>
+                </div>
+                <button class="hint-btn" onclick="toggleHint(0)">💡 힌트</button>
+                <div class="hint" id="hint0">
+                    ConfigMap은 설정 데이터를 저장하는 리소스로, 애플리케이션 코드와 설정을 분리하여 유연한 배포를 가능하게 합니다. 민감한 정보는 Secret을 사용합니다.
+                </div>
+                <div class="feedback" id="feedback0"></div>
+            </div>
+
+            <!-- 문제 2 -->
+            <div class="question-card" id="question1">
+                <div class="question-header">
+                    <span class="question-number">문제 2</span>
+                    <div>
+                        <span class="question-type">시나리오</span>
+                        <span class="question-difficulty">중급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    결제 서비스에 Guaranteed QoS를 적용하려고 합니다. 다음 중 올바른 설정은?
+                </div>
+                <div class="scenario-box">
+                    결제 서비스는 중요한 서비스로 항상 안정적인 리소스를 보장받아야 합니다.
+                </div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A.</span>
+                        requests만 설정하고 limits는 설정하지 않음
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B.</span>
+                        requests < limits로 설정
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C.</span>
+                        requests = limits로 설정
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D.</span>
+                        requests와 limits 모두 설정하지 않음
+                    </div>
+                </div>
+                <button class="hint-btn" onclick="toggleHint(1)">💡 힌트</button>
+                <div class="hint" id="hint1">
+                    Guaranteed QoS는 requests와 limits가 동일해야 하며, 모든 컨테이너에 CPU와 메모리 모두 설정되어야 합니다.
+                </div>
+                <div class="feedback" id="feedback1"></div>
+            </div>
+
+            <!-- 문제 3 -->
+            <div class="question-card" id="question2">
+                <div class="question-header">
+                    <span class="question-number">문제 3</span>
+                    <div>
+                        <span class="question-type">주관식</span>
+                        <span class="question-difficulty">기초</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    'ecommerce' 네임스페이스에 'db-credentials'라는 이름의 Secret을 생성하는 명령어는?
+                </div>
+                <input type="text" class="answer-input" id="answer2" placeholder="kubectl create secret ...">
+                <button class="hint-btn" onclick="toggleHint(2)">💡 힌트</button>
+                <div class="hint" id="hint2">
+                    kubectl create secret generic 명령어를 사용하고, -n 옵션으로 네임스페이스를 지정합니다.
+                </div>
+                <div class="feedback" id="feedback2"></div>
+            </div>
+
+            <!-- 문제 4 -->
+            <div class="question-card" id="question3">
+                <div class="question-header">
+                    <span class="question-number">문제 4</span>
+                    <div>
+                        <span class="question-type">코드 분석</span>
+                        <span class="question-difficulty">중급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    다음 Pod 설정에서 사용된 보안 강화 기법은 무엇입니까?
+                </div>
+                <div class="code-block">
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+                </div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A.</span>
+                        네트워크 정책 적용
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B.</span>
+                        Pod 보안 컨텍스트 설정
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C.</span>
+                        리소스 제한 설정
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D.</span>
+                        Service Account 권한 제한
+                    </div>
+                </div>
+                <button class="hint-btn" onclick="toggleHint(3)">💡 힌트</button>
+                <div class="hint" id="hint3">
+                    securityContext는 Pod나 컨테이너의 보안 설정을 정의합니다. runAsNonRoot, readOnlyRootFilesystem 등은 모두 보안 컨텍스트 설정입니다.
+                </div>
+                <div class="feedback" id="feedback3"></div>
+            </div>
+
+            <!-- 문제 5 -->
+            <div class="question-card" id="question4">
+                <div class="question-header">
+                    <span class="question-number">문제 5</span>
+                    <div>
+                        <span class="question-type">주관식</span>
+                        <span class="question-difficulty">중급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    결제 서비스를 전용 노드에만 배치하기 위해 노드에 taint를 추가하는 명령어는?
+                </div>
+                <input type="text" class="answer-input" id="answer4" placeholder="kubectl taint nodes ...">
+                <button class="hint-btn" onclick="toggleHint(4)">💡 힌트</button>
+                <div class="hint" id="hint4">
+                    kubectl taint 명령어를 사용하여 key=value:effect 형식으로 taint를 추가합니다. 예: payment=true:NoSchedule
+                </div>
+                <div class="feedback" id="feedback4"></div>
+            </div>
+
+            <!-- 문제 6 -->
+            <div class="question-card" id="question5">
+                <div class="question-header">
+                    <span class="question-number">문제 6</span>
+                    <div>
+                        <span class="question-type">시나리오</span>
+                        <span class="question-difficulty">고급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    API Gateway Pod가 항상 백엔드 서비스 Pod와 다른 노드에 배치되도록 하려면?
+                </div>
+                <div class="scenario-box">
+                    고가용성을 위해 API Gateway와 백엔드 서비스가 동일한 노드 장애 시 함께 영향받지 않도록 해야 합니다.
+                </div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A.</span>
+                        nodeSelector를 사용하여 특정 노드 지정
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B.</span>
+                        podAntiAffinity를 사용하여 분산 배치
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C.</span>
+                        tolerations를 사용하여 taint 허용
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D.</span>
+                        resources limits를 다르게 설정
+                    </div>
+                </div>
+                <button class="hint-btn" onclick="toggleHint(5)">💡 힌트</button>
+                <div class="hint" id="hint5">
+                    podAntiAffinity는 특정 Pod들이 같은 토폴로지(노드, 존 등)에 배치되지 않도록 하는 기능입니다.
+                </div>
+                <div class="feedback" id="feedback5"></div>
+            </div>
+
+            <!-- 문제 7 -->
+            <div class="question-card" id="question6">
+                <div class="question-header">
+                    <span class="question-number">문제 7</span>
+                    <div>
+                        <span class="question-type">코드 빈칸</span>
+                        <span class="question-difficulty">중급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    다음 ServiceAccount 권한 설정에서 빈칸을 채우세요:
+                </div>
+                <div class="code-block">
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payment-binding
+subjects:
+- kind: ___________
+  name: payment-sa
+roleRef:
+  kind: Role
+  name: payment-role
+  apiGroup: rbac.authorization.k8s.io
+                </div>
+                <input type="text" class="answer-input" id="answer6" placeholder="subjects의 kind 값">
+                <button class="hint-btn" onclick="toggleHint(6)">💡 힌트</button>
+                <div class="hint" id="hint6">
+                    RoleBinding의 subjects에서 ServiceAccount를 참조할 때 사용하는 kind 값입니다.
+                </div>
+                <div class="feedback" id="feedback6"></div>
+            </div>
+
+            <!-- 문제 8 -->
+            <div class="question-card" id="question7">
+                <div class="question-header">
+                    <span class="question-number">문제 8</span>
+                    <div>
+                        <span class="question-type">객관식</span>
+                        <span class="question-difficulty">중급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    readinessProbe와 livenessProbe의 차이점은?
+                </div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A.</span>
+                        readinessProbe는 Pod 재시작, livenessProbe는 트래픽 차단
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B.</span>
+                        readinessProbe는 트래픽 차단, livenessProbe는 Pod 재시작
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C.</span>
+                        둘 다 Pod를 재시작시킴
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D.</span>
+                        둘 다 트래픽만 차단함
+                    </div>
+                </div>
+                <button class="hint-btn" onclick="toggleHint(7)">💡 힌트</button>
+                <div class="hint" id="hint7">
+                    readinessProbe는 Pod가 트래픽을 받을 준비가 되었는지 확인하고, livenessProbe는 Pod가 살아있는지 확인합니다.
+                </div>
+                <div class="feedback" id="feedback7"></div>
+            </div>
+
+            <!-- 문제 9 -->
+            <div class="question-card" id="question8">
+                <div class="question-header">
+                    <span class="question-number">문제 9</span>
+                    <div>
+                        <span class="question-type">주관식</span>
+                        <span class="question-difficulty">고급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    현재 네임스페이스의 모든 Pod의 QoS 클래스를 확인하는 명령어는?
+                </div>
+                <input type="text" class="answer-input" id="answer8" placeholder="kubectl get pods ...">
+                <button class="hint-btn" onclick="toggleHint(8)">💡 힌트</button>
+                <div class="hint" id="hint8">
+                    -o custom-columns 옵션을 사용하여 .status.qosClass 필드를 출력합니다.
+                </div>
+                <div class="feedback" id="feedback8"></div>
+            </div>
+
+            <!-- 문제 10 -->
+            <div class="question-card" id="question9">
+                <div class="question-header">
+                    <span class="question-number">문제 10</span>
+                    <div>
+                        <span class="question-type">시나리오</span>
+                        <span class="question-difficulty">고급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    트래픽 증가에 따라 자동으로 Pod 수를 늘리려면 어떤 리소스를 사용해야 할까요?
+                </div>
+                <div class="scenario-box">
+                    쇼핑몰의 특정 시간대에 트래픽이 급증하여 자동으로 Pod 수를 조절하고 싶습니다.
+                </div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A.</span>
+                        ReplicaSet
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B.</span>
+                        HorizontalPodAutoscaler (HPA)
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C.</span>
+                        VerticalPodAutoscaler (VPA)
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D.</span>
+                        PodDisruptionBudget
+                    </div>
+                </div>
+                <button class="hint-btn" onclick="toggleHint(9)">💡 힌트</button>
+                <div class="hint" id="hint9">
+                    HPA는 CPU, 메모리 사용량 등의 메트릭을 기반으로 Pod 수를 자동으로 조절합니다.
+                </div>
+                <div class="feedback" id="feedback9"></div>
+            </div>
+
+            <!-- 문제 11 -->
+            <div class="question-card" id="question10">
+                <div class="question-header">
+                    <span class="question-number">문제 11</span>
+                    <div>
+                        <span class="question-type">코드 분석</span>
+                        <span class="question-difficulty">고급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    다음 NetworkPolicy가 수행하는 기능은?
+                </div>
+                <div class="code-block">
+spec:
+  podSelector:
+    matchLabels:
+      app: payment-service
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: api-gateway
+                </div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A.</span>
+                        모든 Pod에서 payment-service로의 접근 허용
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B.</span>
+                        api-gateway Pod에서만 payment-service로의 접근 허용
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C.</span>
+                        payment-service에서 api-gateway로의 접근 허용
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D.</span>
+                        모든 네트워크 트래픽 차단
+                    </div>
+                </div>
+                <button class="hint-btn" onclick="toggleHint(10)">💡 힌트</button>
+                <div class="hint" id="hint10">
+                    이 NetworkPolicy는 payment-service Pod에 적용되며, api-gateway 레이블을 가진 Pod에서만 들어오는 트래픽을 허용합니다.
+                </div>
+                <div class="feedback" id="feedback10"></div>
+            </div>
+
+            <!-- 문제 12 -->
+            <div class="question-card" id="question11">
+                <div class="question-header">
+                    <span class="question-number">문제 12</span>
+                    <div>
+                        <span class="question-type">주관식</span>
+                        <span class="question-difficulty">중급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    Rolling Update 중 최대 1개 Pod까지 추가로 생성할 수 있도록 설정하는 필드는?
+                </div>
+                <input type="text" class="answer-input" id="answer11" placeholder="rollingUpdate 설정 필드명">
+                <button class="hint-btn" onclick="toggleHint(11)">💡 힌트</button>
+                <div class="hint" id="hint11">
+                    strategy.rollingUpdate에서 추가로 생성할 수 있는 Pod 수를 제한하는 필드입니다.
+                </div>
+                <div class="feedback" id="feedback11"></div>
+            </div>
+
+            <!-- 문제 13 -->
+            <div class="question-card" id="question12">
+                <div class="question-header">
+                    <span class="question-number">문제 13</span>
+                    <div>
+                        <span class="question-type">시나리오</span>
+                        <span class="question-difficulty">고급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    InitContainer를 사용하는 주된 목적은?
+                </div>
+                <div class="scenario-box">
+                    Frontend Pod에서 시작하기 전에 정적 파일을 생성하는 작업이 필요합니다.
+                </div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A.</span>
+                        메인 컨테이너와 함께 동시에 실행되는 Sidecar 구성
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B.</span>
+                        메인 컨테이너 시작 전 초기화 작업 수행
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C.</span>
+                        네트워크 정책 설정
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D.</span>
+                        리소스 사용량 모니터링
+                    </div>
+                </div>
+                <button class="hint-btn" onclick="toggleHint(12)">💡 힌트</button>
+                <div class="hint" id="hint12">
+                    InitContainer는 메인 컨테이너가 시작되기 전에 실행되어 초기화 작업을 수행하고 종료됩니다.
+                </div>
+                <div class="feedback" id="feedback12"></div>
+            </div>
+
+            <!-- 문제 14 -->
+            <div class="question-card" id="question13">
+                <div class="question-header">
+                    <span class="question-number">문제 14</span>
+                    <div>
+                        <span class="question-type">주관식</span>
+                        <span class="question-difficulty">고급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    특정 Deployment의 Rolling Update 상태를 확인하는 명령어는?
+                </div>
+                <input type="text" class="answer-input" id="answer13" placeholder="kubectl rollout ...">
+                <button class="hint-btn" onclick="toggleHint(13)">💡 힌트</button>
+                <div class="hint" id="hint13">
+                    kubectl rollout 명령어를 사용하여 배포 상태를 확인할 수 있습니다.
+                </div>
+                <div class="feedback" id="feedback13"></div>
+            </div>
+
+            <!-- 문제 15 -->
+            <div class="question-card" id="question14">
+                <div class="question-header">
+                    <span class="question-number">문제 15</span>
+                    <div>
+                        <span class="question-type">통합 시나리오</span>
+                        <span class="question-difficulty">최고급</span>
+                    </div>
+                </div>
+                <div class="question-text">
+                    E-Commerce 마이크로서비스 전체 배포에서 가장 중요한 보안 고려사항은?
+                </div>
+                <div class="scenario-box">
+                    결제 정보, 사용자 개인정보 등 민감한 데이터를 다루는 마이크로서비스 환경에서 종합적인 보안 전략이 필요합니다.
+                </div>
+                <div class="options">
+                    <div class="option" data-value="A">
+                        <span class="option-label">A.</span>
+                        높은 CPU/메모리 리소스 할당
+                    </div>
+                    <div class="option" data-value="B">
+                        <span class="option-label">B.</span>
+                        Secret 관리, RBAC, NetworkPolicy, SecurityContext 종합 적용
+                    </div>
+                    <div class="option" data-value="C">
+                        <span class="option-label">C.</span>
+                        많은 수의 Replica 설정
+                    </div>
+                    <div class="option" data-value="D">
+                        <span class="option-label">D.</span>
+                        빠른 Rolling Update 설정
+                    </div>
+                </div>
+                <button class="hint-btn" onclick="toggleHint(14)">💡 힌트</button>
+                <div class="hint" id="hint14">
+                    마이크로서비스 보안은 다층 방어(Defense in Depth) 접근법이 필요합니다. 데이터 보호, 접근 제어, 네트워크 격리, 컨테이너 보안 등을 종합적으로 고려해야 합니다.
+                </div>
+                <div class="feedback" id="feedback14"></div>
+            </div>
+
+            <!-- 최종 점수 -->
+            <div class="final-score" id="finalScore">
+                <h2>🎉 통합 퀴즈 완료!</h2>
+                <div class="score-circle" id="scoreCircle">
+                    <span id="scoreText">0/15</span>
+                </div>
+                <div id="scoreMessage"></div>
+                <button class="btn btn-primary" onclick="restartQuiz()">다시 도전</button>
+            </div>
+
+            <!-- 버튼 영역 -->
+            <div class="buttons">
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="prevBtn" onclick="previousQuestion()" disabled>이전</button>
+                    <button class="show-all-btn" onclick="showAllAnswers()">모든 정답 보기</button>
+                </div>
+                <div>
+                    <button class="btn btn-primary" id="checkBtn" onclick="checkAnswer()">정답 확인</button>
+                    <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" style="display: none;">다음</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모든 정답 보기 모달 -->
+    <div class="answers-modal" id="answersModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeAnswersModal()">&times;</span>
+            <h2>📋 통합 퀴즈 정답 및 해설</h2>
+            <div id="allAnswers"></div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                type: 'multiple',
+                question: '마이크로서비스 아키텍처에서 ConfigMap을 사용하는 주된 이유는?',
+                correct: 'A',
+                explanation: 'ConfigMap은 애플리케이션 코드와 설정을 분리하여 환경별 배포를 용이하게 하는 것이 주된 목적입니다. 민감한 정보는 Secret을 사용합니다.'
+            },
+            {
+                type: 'multiple',
+                question: '결제 서비스에 Guaranteed QoS를 적용하려고 합니다. 다음 중 올바른 설정은?',
+                correct: 'C',
+                explanation: 'Guaranteed QoS를 위해서는 모든 컨테이너에서 CPU와 메모리의 requests와 limits가 동일하게 설정되어야 합니다.'
+            },
+            {
+                type: 'input',
+                question: "'ecommerce' 네임스페이스에 'db-credentials'라는 이름의 Secret을 생성하는 명령어는?",
+                correct: ['kubectl create secret generic db-credentials -n ecommerce', 'kubectl create secret generic db-credentials --namespace ecommerce'],
+                explanation: 'kubectl create secret generic 명령어를 사용하고 -n 또는 --namespace 옵션으로 네임스페이스를 지정합니다.'
+            },
+            {
+                type: 'multiple',
+                question: 'Pod 설정에서 사용된 보안 강화 기법은 무엇입니까?',
+                correct: 'B',
+                explanation: 'securityContext는 Pod나 컨테이너의 보안 설정을 정의하는 필드입니다. runAsNonRoot, readOnlyRootFilesystem 등이 포함됩니다.'
+            },
+            {
+                type: 'input',
+                question: '결제 서비스를 전용 노드에만 배치하기 위해 노드에 taint를 추가하는 명령어는?',
+                correct: ['kubectl taint nodes <node-name> payment=true:NoSchedule', 'kubectl taint node <node-name> payment=true:NoSchedule'],
+                explanation: 'kubectl taint 명령어를 사용하여 key=value:effect 형식으로 taint를 추가합니다.'
+            },
+            {
+                type: 'multiple',
+                question: 'API Gateway Pod가 항상 백엔드 서비스 Pod와 다른 노드에 배치되도록 하려면?',
+                correct: 'B',
+                explanation: 'podAntiAffinity를 사용하면 특정 Pod들이 같은 토폴로지(노드, 존 등)에 배치되지 않도록 할 수 있습니다.'
+            },
+            {
+                type: 'input',
+                question: 'ServiceAccount를 참조하는 RoleBinding의 subjects kind 값은?',
+                correct: ['ServiceAccount'],
+                explanation: 'RoleBinding에서 ServiceAccount를 참조할 때는 kind: ServiceAccount를 사용합니다.'
+            },
+            {
+                type: 'multiple',
+                question: 'readinessProbe와 livenessProbe의 차이점은?',
+                correct: 'B',
+                explanation: 'readinessProbe는 Pod가 트래픽을 받을 준비가 되었는지 확인하여 트래픽을 차단하고, livenessProbe는 Pod가 살아있는지 확인하여 Pod를 재시작합니다.'
+            },
+            {
+                type: 'input',
+                question: '현재 네임스페이스의 모든 Pod의 QoS 클래스를 확인하는 명령어는?',
+                correct: ['kubectl get pods -o custom-columns=NAME:.metadata.name,QOS:.status.qosClass', 'kubectl get pod -o custom-columns=NAME:.metadata.name,QOS:.status.qosClass'],
+                explanation: '-o custom-columns 옵션을 사용하여 .status.qosClass 필드를 출력합니다.'
+            },
+            {
+                type: 'multiple',
+                question: '트래픽 증가에 따라 자동으로 Pod 수를 늘리려면 어떤 리소스를 사용해야 할까요?',
+                correct: 'B',
+                explanation: 'HorizontalPodAutoscaler(HPA)는 CPU, 메모리 사용량 등의 메트릭을 기반으로 Pod 수를 자동으로 조절합니다.'
+            },
+            {
+                type: 'multiple',
+                question: 'NetworkPolicy가 수행하는 기능은?',
+                correct: 'B',
+                explanation: '이 NetworkPolicy는 payment-service Pod에 적용되며, api-gateway 레이블을 가진 Pod에서만 들어오는 트래픽을 허용합니다.'
+            },
+            {
+                type: 'input',
+                question: 'Rolling Update 중 최대 1개 Pod까지 추가로 생성할 수 있도록 설정하는 필드는?',
+                correct: ['maxSurge'],
+                explanation: 'strategy.rollingUpdate.maxSurge는 배포 중 추가로 생성할 수 있는 Pod 수를 제한합니다.'
+            },
+            {
+                type: 'multiple',
+                question: 'InitContainer를 사용하는 주된 목적은?',
+                correct: 'B',
+                explanation: 'InitContainer는 메인 컨테이너가 시작되기 전에 실행되어 초기화 작업을 수행하고 종료됩니다.'
+            },
+            {
+                type: 'input',
+                question: '특정 Deployment의 Rolling Update 상태를 확인하는 명령어는?',
+                correct: ['kubectl rollout status deployment/<deployment-name>', 'kubectl rollout status deploy/<deployment-name>'],
+                explanation: 'kubectl rollout status 명령어를 사용하여 배포 상태를 확인할 수 있습니다.'
+            },
+            {
+                type: 'multiple',
+                question: 'E-Commerce 마이크로서비스 전체 배포에서 가장 중요한 보안 고려사항은?',
+                correct: 'B',
+                explanation: '마이크로서비스 보안은 Secret 관리, RBAC, NetworkPolicy, SecurityContext 등을 종합적으로 적용하는 다층 방어 접근법이 필요합니다.'
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = new Array(questions.length).fill(false);
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `${currentQuestion + 1}/${questions.length}`;
+        }
+
+        function showQuestion(index) {
+            document.querySelectorAll('.question-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            document.getElementById(`question${index}`).classList.add('active');
+            
+            document.getElementById('prevBtn').disabled = index === 0;
+            
+            const checkBtn = document.getElementById('checkBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (answered[index]) {
+                checkBtn.style.display = 'none';
+                nextBtn.style.display = 'inline-block';
+                nextBtn.textContent = index === questions.length - 1 ? '결과 보기' : '다음';
+            } else {
+                checkBtn.style.display = 'inline-block';
+                nextBtn.style.display = 'none';
+            }
+            
+            updateProgress();
+        }
+
+        function toggleHint(questionIndex) {
+            const hint = document.getElementById(`hint${questionIndex}`);
+            hint.classList.toggle('show');
+        }
+
+        function checkAnswer() {
+            const question = questions[currentQuestion];
+            const feedback = document.getElementById(`feedback${currentQuestion}`);
+            let isCorrect = false;
+            let userAnswer = '';
+
+            if (question.type === 'multiple') {
+                const selectedOption = document.querySelector(`#question${currentQuestion} .option.selected`);
+                if (!selectedOption) {
+                    alert('답을 선택해주세요.');
+                    return;
+                }
+                userAnswer = selectedOption.dataset.value;
+                isCorrect = userAnswer === question.correct;
+                
+                document.querySelectorAll(`#question${currentQuestion} .option`).forEach(option => {
+                    option.style.pointerEvents = 'none';
+                    if (option.dataset.value === question.correct) {
+                        option.classList.add('correct');
+                    } else if (option.classList.contains('selected')) {
+                        option.classList.add('incorrect');
+                    }
+                });
+            } else {
+                const input = document.getElementById(`answer${currentQuestion}`);
+                userAnswer = input.value.trim();
+                if (!userAnswer) {
+                    alert('답을 입력해주세요.');
+                    return;
+                }
+                
+                if (Array.isArray(question.correct)) {
+                    isCorrect = question.correct.some(correct => 
+                        userAnswer.toLowerCase().includes(correct.toLowerCase()) ||
+                        correct.toLowerCase().includes(userAnswer.toLowerCase())
+                    );
+                } else {
+                    isCorrect = userAnswer.toLowerCase() === question.correct.toLowerCase();
+                }
+                
+                input.disabled = true;
+            }
+
+            answered[currentQuestion] = true;
+
+            if (isCorrect) {
+                score++;
+                feedback.className = 'feedback correct show';
+                feedback.innerHTML = `
+                    <strong>🎉 정답입니다!</strong><br>
+                    정답: ${Array.isArray(question.correct) ? question.correct[0] : question.correct}<br>
+                    ${question.explanation}
+                `;
+                document.getElementById('checkBtn').textContent = '정답입니다!';
+                document.getElementById('checkBtn').style.background = '#4caf50';
+            } else {
+                feedback.className = 'feedback incorrect show';
+                feedback.innerHTML = `
+                    <strong>❌ 틀렸습니다.</strong><br>
+                    정답: ${Array.isArray(question.correct) ? question.correct[0] : question.correct}<br>
+                    ${question.explanation}
+                `;
+                document.getElementById('checkBtn').textContent = '다시 시도하기';
+                document.getElementById('checkBtn').style.background = '#f44336';
+                
+                setTimeout(() => {
+                    if (question.type === 'multiple') {
+                        document.querySelectorAll(`#question${currentQuestion} .option`).forEach(option => {
+                            option.classList.remove('selected', 'correct', 'incorrect');
+                            option.style.pointerEvents = 'auto';
+                        });
+                    } else {
+                        document.getElementById(`answer${currentQuestion}`).disabled = false;
+                        document.getElementById(`answer${currentQuestion}`).value = '';
+                    }
+                    feedback.classList.remove('show');
+                    document.getElementById('checkBtn').textContent = '정답 확인';
+                    document.getElementById('checkBtn').style.background = '#6a11cb';
+                    answered[currentQuestion] = false;
+                }, 1500);
+                return;
+            }
+
+            document.getElementById('checkBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            document.getElementById('nextBtn').textContent = currentQuestion === questions.length - 1 ? '결과 보기' : '다음';
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion(currentQuestion);
+            } else {
+                showFinalScore();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion(currentQuestion);
+            }
+        }
+
+        function showFinalScore() {
+            document.querySelectorAll('.question-card').forEach(card => {
+                card.style.display = 'none';
+            });
+            document.querySelector('.buttons').style.display = 'none';
+            
+            const finalScore = document.getElementById('finalScore');
+            const scoreCircle = document.getElementById('scoreCircle');
+            const scoreText = document.getElementById('scoreText');
+            const scoreMessage = document.getElementById('scoreMessage');
+            
+            scoreText.textContent = `${score}/${questions.length}`;
+            
+            let message = '';
+            let className = '';
+            
+            if (score >= 13) {
+                message = '🥇 완벽합니다! 실전 통합 전문가입니다!';
+                className = 'score-excellent';
+            } else if (score >= 11) {
+                message = '🥈 훌륭합니다! CKA/CKAD 시험 준비 완료!';
+                className = 'score-good';
+            } else if (score >= 8) {
+                message = '🥉 좋습니다! 추가 학습으로 완벽하게!';
+                className = 'score-fair';
+            } else {
+                message = '📚 통합 학습을 다시 진행해보세요!';
+                className = 'score-poor';
+            }
+            
+            scoreCircle.className = `score-circle ${className}`;
+            scoreMessage.innerHTML = `
+                <h3>${message}</h3>
+                <p>정답률: ${Math.round((score/questions.length)*100)}%</p>
+                <p>2주차 K8s 핵심 리소스 통합 학습을 완료하셨습니다!</p>
+                <p>🎯 다음 단계: 3주차 스토리지 & 네트워크로 이동하세요!</p>
+            `;
+            
+            finalScore.classList.add('show');
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            answered.fill(false);
+            
+            document.getElementById('finalScore').classList.remove('show');
+            document.querySelector('.buttons').style.display = 'flex';
+            
+            document.querySelectorAll('.question-card').forEach((card, index) => {
+                card.style.display = 'none';
+                card.querySelectorAll('.option').forEach(option => {
+                    option.classList.remove('selected', 'correct', 'incorrect');
+                    option.style.pointerEvents = 'auto';
+                });
+                
+                const input = card.querySelector('.answer-input');
+                if (input) {
+                    input.value = '';
+                    input.disabled = false;
+                }
+                
+                card.querySelector('.feedback').classList.remove('show');
+                card.querySelector('.hint').classList.remove('show');
+            });
+            
+            document.getElementById('checkBtn').textContent = '정답 확인';
+            document.getElementById('checkBtn').style.background = '#6a11cb';
+            
+            showQuestion(0);
+        }
+
+        function showAllAnswers() {
+            const modal = document.getElementById('answersModal');
+            const allAnswers = document.getElementById('allAnswers');
+            
+            let content = '';
+            questions.forEach((q, index) => {
+                const answer = Array.isArray(q.correct) ? q.correct[0] : q.correct;
+                content += `
+                    <div style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #6a11cb;">
+                        <strong>문제 ${index + 1}:</strong> ${q.question}<br><br>
+                        <strong>정답:</strong> <span style="color: #4caf50; font-weight: bold;">${answer}</span><br><br>
+                        <strong>해설:</strong> ${q.explanation}
+                    </div>
+                `;
+            });
+            
+            allAnswers.innerHTML = content;
+            modal.style.display = 'block';
+        }
+
+        function closeAnswersModal() {
+            document.getElementById('answersModal').style.display = 'none';
+        }
+
+        // 이벤트 리스너
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const questionCard = this.closest('.question-card');
+                    questionCard.querySelectorAll('.option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                });
+            });
+
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const checkBtn = document.getElementById('checkBtn');
+                    const nextBtn = document.getElementById('nextBtn');
+                    
+                    if (checkBtn.style.display !== 'none') {
+                        checkAnswer();
+                    } else if (nextBtn.style.display !== 'none') {
+                        nextQuestion();
+                    }
+                }
+            });
+
+            window.addEventListener('click', function(e) {
+                const modal = document.getElementById('answersModal');
+                if (e.target === modal) {
+                    closeAnswersModal();
+                }
+            });
+
+            showQuestion(0);
+        });
+    </script>
+</body>
+</html>

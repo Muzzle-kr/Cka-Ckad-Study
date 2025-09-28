@@ -1,0 +1,283 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-gateway-hpa
+  namespace: ecommerce
+  labels:
+    app: api-gateway
+    component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-gateway
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+      - type: Pods
+        value: 2
+        periodSeconds: 30
+      selectPolicy: Max
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: user-service-hpa
+  namespace: ecommerce
+  labels:
+    app: user-service
+    component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: user-service
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 85
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 30
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: product-service-hpa
+  namespace: ecommerce
+  labels:
+    app: product-service
+    component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: product-service
+  minReplicas: 2
+  maxReplicas: 12
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 33
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-hpa
+  namespace: ecommerce
+  labels:
+    app: frontend
+    component: autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: frontend
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 30
+
+---
+# Resource optimization deployment with optimized resource settings
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: optimized-user-service
+  namespace: ecommerce
+  labels:
+    app: optimized-user-service
+    tier: backend
+    optimization: enabled
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: optimized-user-service
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: optimized-user-service
+        tier: backend
+        optimization: enabled
+    spec:
+      serviceAccountName: user-service-sa
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: optimized-user-service
+      containers:
+      - name: user-service
+        image: node:18-alpine
+        ports:
+        - containerPort: 8081
+          name: http
+        command: ["node"]
+        args: ["-e", "require('http').createServer((req,res)=>{const start=Date.now();res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({service:'optimized-user-service',status:'healthy',responseTime:Date.now()-start,optimization:'enabled',timestamp:new Date().toISOString()}))}).listen(8081,()=>console.log('Optimized user service running on port 8081'))"]
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: NODE_OPTIONS
+          value: "--max-old-space-size=256"  # 메모리 사용량 최적화
+        resources:
+          requests:
+            memory: "128Mi"   # 최적화된 요청량
+            cpu: "100m"
+          limits:
+            memory: "256Mi"   # 적정 제한량
+            cpu: "300m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8081
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8081
+          initialDelaySeconds: 3
+          periodSeconds: 3
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 2
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+
+---
+# Vertical Pod Autoscaler (VPA) recommendation
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: user-service-vpa
+  namespace: ecommerce
+  labels:
+    app: user-service
+    component: autoscaling
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: optimized-user-service
+  updatePolicy:
+    updateMode: "Auto"  # "Off" for recommendation only
+  resourcePolicy:
+    containerPolicies:
+    - containerName: user-service
+      maxAllowed:
+        cpu: 500m
+        memory: 512Mi
+      minAllowed:
+        cpu: 50m
+        memory: 64Mi
+      controlledResources: ["cpu", "memory"]
