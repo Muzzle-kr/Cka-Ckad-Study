@@ -1,0 +1,55 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: batch-processing-job
+  labels:
+    app: batch-processor
+    type: compute-intensive
+spec:
+  parallelism: 2
+  completions: 4
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: batch-processor
+        job: compute-task
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: workload-type
+                operator: In
+                values:
+                - batch
+                - compute
+          - weight: 50
+            preference:
+              matchExpressions:
+              - key: instance-type
+                operator: In
+                values:
+                - c5.large
+                - c5.xlarge
+      containers:
+      - name: batch-processor
+        image: busybox:1.35
+        command: ['sh', '-c', 'echo "Processing batch job..."; sleep 60; echo "Job completed successfully"']
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        env:
+        - name: JOB_TYPE
+          value: "batch"
+        - name: PARALLEL_WORKERS
+          value: "2"
+        - name: PROCESSING_MODE
+          value: "intensive"
+      restartPolicy: Never

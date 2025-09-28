@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: besteffort-pod
+  labels:
+    app: besteffort-example
+    tier: background
+spec:
+  containers:
+  - name: background-worker
+    image: busybox:1.35
+    command: ['sh', '-c', 'while true; do echo "Background job running..."; sleep 30; done']
+    env:
+    - name: QOS_CLASS
+      value: "BestEffort"
+    - name: WORKER_TYPE
+      value: "background"
+  restartPolicy: Always

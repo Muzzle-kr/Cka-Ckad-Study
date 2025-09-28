@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: toleration-pod
+  labels:
+    app: toleration-example
+    scheduling: toleration
+    special: "true"
+spec:
+  containers:
+  - name: special-app
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "200m"
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+    env:
+    - name: TOLERATION_STATUS
+      value: "enabled"
+    - name: APP_TYPE
+      value: "special"
+    - name: NODE_TYPE
+      value: "dedicated"
+  tolerations:
+  - key: "special"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+  - key: "workload"
+    operator: "Equal"
+    value: "database"
+    effect: "NoSchedule"
+  - key: "maintenance"
+    operator: "Exists"
+    effect: "NoExecute"
+    tolerationSeconds: 300
+  restartPolicy: Always

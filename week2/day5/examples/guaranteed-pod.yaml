@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: guaranteed-pod
+  labels:
+    app: guaranteed-example
+    tier: frontend
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        memory: "200Mi"
+        cpu: "700m"
+      limits:
+        memory: "200Mi"
+        cpu: "700m"
+    env:
+    - name: QOS_CLASS
+      value: "Guaranteed"
+  restartPolicy: Always
